@@ -1,6 +1,10 @@
 # 4TH YEAR PROJECT
 
-I will eventually type something noteworthy here.
+Required libraries:
+
+> SFML v2.5.1
+
+Set SFML_SDK environment variable to correct SFML install location.
 
 ## Author
 
