@@ -1,10 +1,12 @@
-# 4TH YEAR PROJECT
+# Voxel Engine
 
-Required libraries:
+Included libraries:
 
-> SFML v2.5.1
+> SDL2
+> GLM
+> GLEW
 
-Set SFML_SDK environment variable to correct SFML install location.
+Project made with Visual Studio 2019.
 
 ## Author
 
