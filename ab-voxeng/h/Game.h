@@ -13,9 +13,9 @@
 #include "SDL_opengl.h"
 #include "SDL_image.h"
 #include "SDL_ttf.h"
+#include "Shader.h"
 
 #include "Debug.h"
-#include "RaycasterTest.h"
 
 class Game
 {
@@ -31,8 +31,9 @@ private:
 	double m_frameRate;
 	double m_frameMs;
 	bool m_looping;
-	Raycaster *m_rayCastEng;
+	ab::Shader *m_shader;
 
+	void initialise();
 	void processEvents();
 	void update(double t_deltaTime);
 	void draw();
