@@ -19,6 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\Camera.cpp" />
     <ClCompile Include="src\Clock.cpp" />
     <ClCompile Include="src\Game.cpp" />
     <ClCompile Include="src\Main.cpp" />
@@ -27,8 +28,10 @@
     <ClCompile Include="src\OpenGL.cpp" />
     <ClCompile Include="src\RaycasterTest.cpp" />
     <ClCompile Include="src\Shader.cpp" />
+    <ClCompile Include="src\XboxOneController.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="h\Camera.h" />
     <ClInclude Include="h\Clock.h" />
     <ClInclude Include="h\Debug.h" />
     <ClInclude Include="h\Game.h" />
@@ -38,6 +41,7 @@
     <ClInclude Include="h\OpenGL.h" />
     <ClInclude Include="h\RaycasterTest.h" />
     <ClInclude Include="h\Shader.h" />
+    <ClInclude Include="h\XboxOneController.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="shaders\main.frag" />
