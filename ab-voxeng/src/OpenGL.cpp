@@ -100,3 +100,32 @@ void ab::OpenGL::importModel(const char *t_modelFilename, Model &t_model, bool t
 
 	glBindVertexArray(0);
 }
+
+/// <summary>
+/// Draw a single model.
+/// </summary>
+/// <param name="t_model">The data struct that holds all model data.</param>
+void ab::OpenGL::drawModel(Model &t_model)
+{
+	glBindVertexArray(t_model.vertexArrayObjectID);
+
+	glDrawElements(GL_TRIANGLES, t_model.indices.size(), GL_UNSIGNED_SHORT, (void*)0);
+
+	glBindVertexArray(0);
+}
+
+/// <summary>
+/// Draw a model using instancing.
+/// Instancing positions are stored in the t_model object as t_model.instancingPositions.
+/// </summary>
+/// <param name="t_model">The data struct that holds all model data.</param>
+/// <param name="t_amount">This is the number of models you want to draw in one instance.</param>
+void ab::OpenGL::drawModelsInstanced(Model &t_model)
+{
+	glBindVertexArray(t_model.vertexArrayObjectID);
+
+	glBindBuffer(GL_ARRAY_BUFFER, t_model.instanceBufferID);
+	glDrawElementsInstanced(GL_TRIANGLES, t_model.indices.size(), GL_UNSIGNED_SHORT, (void*)0, t_model.instancingPositions.size());
+
+	glBindVertexArray(0);
+}

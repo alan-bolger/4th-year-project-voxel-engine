@@ -11,7 +11,9 @@ namespace ab
 	class OpenGL
 	{
 	public:
-		void importModel(const char *t_modelFilename, Model &t_model, bool t_instancingOn);
+		static void importModel(const char *t_modelFilename, Model &t_model, bool t_instancingOn);
+		static void drawModel(Model &t_model);
+		static void drawModelsInstanced(Model &t_model);
 
 	private:
 

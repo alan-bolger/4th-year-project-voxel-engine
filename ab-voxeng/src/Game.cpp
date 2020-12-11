@@ -9,10 +9,9 @@
 /// <param name="t_width">The width of the window.</param>
 /// <param name="t_height">The height of the window.</param>
 Game::Game(int t_width, int t_height) 
-	:
-	m_window(SDL_CreateWindow("Voxel Engine [Alan Bolger]", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, t_width, t_height, SDL_WINDOW_OPENGL)),
-	m_renderer(SDL_CreateRenderer(m_window, -1, SDL_RENDERER_ACCELERATED))
 {
+	m_window = SDL_CreateWindow("Voxel Engine [Alan Bolger]", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, t_width, t_height, SDL_WINDOW_OPENGL),
+	//m_renderer = SDL_CreateRenderer(m_window, -1, SDL_RENDERER_ACCELERATED);
 	initialise();
 }
 
@@ -24,8 +23,8 @@ Game::~Game()
 	SDL_DestroyWindow(m_window);
 	m_window = NULL;
 
-	SDL_DestroyRenderer(m_renderer);
-	m_renderer = NULL;
+	//SDL_DestroyRenderer(m_renderer);
+	//m_renderer = NULL;
 	
 	IMG_Quit();
 	SDL_Quit();
@@ -71,9 +70,15 @@ void Game::initialise()
 		std::cout << glewGetErrorString(glewInit()) << std::endl;
 	}
 
+	// Use v-sync
+	if (SDL_GL_SetSwapInterval(1) < 0)
+	{
+		std::cout << "Warning: Unable to set VSync! Error: %s\n", SDL_GetError();
+	}
+
 	// Renderer settings
-	SDL_SetRenderDrawColor(m_renderer, 0, 0, 0, 255); // Set renderer colour to black	
-	SDL_RenderSetLogicalSize(m_renderer, 1280, 720); // Set logical size for rendering
+	//SDL_SetRenderDrawColor(m_renderer, 0, 0, 0, 255); // Set renderer colour to black	
+	//SDL_RenderSetLogicalSize(m_renderer, 1280, 720); // Set logical size for rendering
 	SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "0"); // Set texture filtering to nearest pixel
 
 	// Initialize PNG loading
@@ -94,6 +99,22 @@ void Game::initialise()
 	m_frameRate = 60.0;
 	m_frameMs = 1000.0f / m_frameRate;
 	m_looping = true;
+
+	// View and projection matrices
+	m_view = glm::mat4(1.0f);
+	m_projection = glm::perspective(45.0f, 4.0f / 3.0f, 1.0f, 1000.0f);
+
+	// Shader
+	m_shader = new ab::Shader("shaders/main.vert", "shaders/main.frag");
+
+	// Test model
+	ab::OpenGL::importModel("models/generic-block.obj", m_cube, false);
+	m_cube.matrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 10.0f));
+
+	// MVP
+	m_shaderModelMatrixID = glGetUniformLocation(m_shader->m_programID, "model");
+	m_shaderViewMatrixID = glGetUniformLocation(m_shader->m_programID, "view");
+	m_shaderProjectionMatrixID = glGetUniformLocation(m_shader->m_programID, "projection");
 }
 
 /// <summary>
@@ -133,11 +154,19 @@ void Game::update(double t_deltaTime)
 /// </summary>
 void Game::draw()
 {
-	SDL_SetRenderDrawColor(m_renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
-
 	// Clear screen
-	SDL_RenderClear(m_renderer);
+	glViewport(0, 0, 1280, 720);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	// Activate shader
+	glUseProgram(m_shader->m_programID);
+
+	// Draw player (only used for debug purposes)
+	glUniformMatrix4fv(m_shaderModelMatrixID, 1, GL_FALSE, &m_cube.matrix[0][0]);
+
+	// Draw
+	ab::OpenGL::drawModel(m_cube);
 	
 	// Display everything
-	SDL_RenderPresent(m_renderer);
+	SDL_GL_SwapWindow(m_window);
 }

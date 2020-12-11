@@ -40,6 +40,8 @@
     <ClInclude Include="h\Shader.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="shaders\main.frag" />
+    <None Include="shaders\main.vert" />
     <None Include="shaders\standard.frag" />
     <None Include="shaders\standard.vert" />
   </ItemGroup>
