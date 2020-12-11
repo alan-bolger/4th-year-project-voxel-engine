@@ -15,6 +15,8 @@
 #include "SDL_ttf.h"
 #include "Shader.h"
 #include "OpenGL.h"
+#include "Camera.h"
+#include "XboxOneController.h"
 
 #include "Debug.h"
 
@@ -32,6 +34,8 @@ private:
 	double m_frameRate;
 	double m_frameMs;
 	bool m_looping;
+	ab::XboxOneController *m_controller;
+	ab::Camera *m_camera;
 	ab::Shader *m_shader;
 	ab::Model m_cube;
 	glm::mat4 m_view;

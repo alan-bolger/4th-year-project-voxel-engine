@@ -10,8 +10,7 @@
 /// <param name="t_height">The height of the window.</param>
 Game::Game(int t_width, int t_height) 
 {
-	m_window = SDL_CreateWindow("Voxel Engine [Alan Bolger]", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, t_width, t_height, SDL_WINDOW_OPENGL),
-	//m_renderer = SDL_CreateRenderer(m_window, -1, SDL_RENDERER_ACCELERATED);
+	m_window = SDL_CreateWindow("Voxel Engine [Alan Bolger]", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, t_width, t_height, SDL_WINDOW_OPENGL);
 	initialise();
 }
 
@@ -23,8 +22,7 @@ Game::~Game()
 	SDL_DestroyWindow(m_window);
 	m_window = NULL;
 
-	//SDL_DestroyRenderer(m_renderer);
-	//m_renderer = NULL;
+	delete m_shader;
 	
 	IMG_Quit();
 	SDL_Quit();
@@ -47,7 +45,7 @@ void Game::start()
 		SDL_Delay((Uint32)f_delayMs);
 
 		processEvents();
-		update(f_delayMs);
+		update(f_delayMs / 100);
 		draw();
 	}
 }
@@ -65,6 +63,15 @@ void Game::initialise()
 	glewExperimental = GL_TRUE;
 	auto init_res = glewInit();
 
+	// Console message
+	DEBUG_MSG("VoxGon v1.0");
+	DEBUG_MSG("By Alan 'Two Sheds' Bolger");
+	DEBUG_MSG("----------------------------");
+	DEBUG_MSG(glGetString(GL_VENDOR));
+	DEBUG_MSG(glGetString(GL_RENDERER));
+	DEBUG_MSG(glGetString(GL_VERSION));
+	DEBUG_MSG("----------------------------");
+
 	if (init_res != GLEW_OK)
 	{
 		std::cout << glewGetErrorString(glewInit()) << std::endl;
@@ -77,8 +84,6 @@ void Game::initialise()
 	}
 
 	// Renderer settings
-	//SDL_SetRenderDrawColor(m_renderer, 0, 0, 0, 255); // Set renderer colour to black	
-	//SDL_RenderSetLogicalSize(m_renderer, 1280, 720); // Set logical size for rendering
 	SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "0"); // Set texture filtering to nearest pixel
 
 	// Initialize PNG loading
@@ -104,14 +109,20 @@ void Game::initialise()
 	m_view = glm::mat4(1.0f);
 	m_projection = glm::perspective(45.0f, 4.0f / 3.0f, 1.0f, 1000.0f);
 
+	// Controller
+	m_controller = new ab::XboxOneController(0);
+
+	// Camera
+	m_camera = new ab::Camera(*m_controller);
+
 	// Shader
 	m_shader = new ab::Shader("shaders/main.vert", "shaders/main.frag");
 
 	// Test model
 	ab::OpenGL::importModel("models/generic-block.obj", m_cube, false);
-	m_cube.matrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 10.0f));
+	m_cube.matrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
 
-	// MVP
+	// MVP uniforms
 	m_shaderModelMatrixID = glGetUniformLocation(m_shader->m_programID, "model");
 	m_shaderViewMatrixID = glGetUniformLocation(m_shader->m_programID, "view");
 	m_shaderProjectionMatrixID = glGetUniformLocation(m_shader->m_programID, "projection");
@@ -138,15 +149,25 @@ void Game::processEvents()
 			}
 			break;
 		}
+
+		m_controller->processEvents(f_event);
 	}
 }
 
 /// <summary>
 /// Update logic.
 /// </summary>
+/// <param name="t_deltaTime">The current delta time.</param>
 void Game::update(double t_deltaTime)
 {
-	
+	// Update camera and controls
+	m_camera->update(t_deltaTime);
+
+	// Update view matrix from camera
+	glUniformMatrix4fv(m_shaderViewMatrixID, 1, GL_FALSE, &m_camera->getView()[0][0]);
+
+	// Update projection matrix
+	glUniformMatrix4fv(m_shaderProjectionMatrixID, 1, GL_FALSE, &m_projection[0][0]);
 }
 
 /// <summary>
@@ -155,13 +176,13 @@ void Game::update(double t_deltaTime)
 void Game::draw()
 {
 	// Clear screen
-	glViewport(0, 0, 1280, 720);
+	// glViewport(0, 0, 1280, 720);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	// Activate shader
 	glUseProgram(m_shader->m_programID);
 
-	// Draw player (only used for debug purposes)
+	// Draw test cube
 	glUniformMatrix4fv(m_shaderModelMatrixID, 1, GL_FALSE, &m_cube.matrix[0][0]);
 
 	// Draw
