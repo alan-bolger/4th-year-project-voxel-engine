@@ -20,7 +20,7 @@ Clock::~Clock()
 /// <summary>
 /// Get elapsed time.
 /// </summary>
-/// <returns>Uint64 - The time elapsed since the last call to restart().</returns>
+/// <returns>[Uint64] The time elapsed since the last call to restart().</returns>
 Uint64 Clock::getElapsedTime() const
 {
 	return SDL_GetTicks() - m_startTime;
@@ -29,7 +29,7 @@ Uint64 Clock::getElapsedTime() const
 /// <summary>
 /// Get total time.
 /// </summary>
-/// <returns>Uint64 - The time since the Clock object was created.</returns>
+/// <returns>[Uint64] The time since the Clock object was created.</returns>
 Uint64 Clock::getTotalTime() const
 {
 	return SDL_GetTicks() - m_creationTime;
@@ -38,7 +38,7 @@ Uint64 Clock::getTotalTime() const
 /// <summary>
 /// Restart time counter to zero.
 /// </summary>
-/// <returns>Uint64 - The time elapsed since the clock was restarted (or created if restart() hasn't been called yet).</returns>
+/// <returns>[Uint64] The time elapsed since the clock was restarted (or created if restart() hasn't been called yet).</returns>
 Uint64 Clock::restart()
 {
 	Uint64 f_timeElapsed = SDL_GetTicks() - m_startTime;

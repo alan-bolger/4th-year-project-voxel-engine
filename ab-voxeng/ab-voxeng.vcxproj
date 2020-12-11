@@ -22,15 +22,28 @@
     <ClCompile Include="src\Clock.cpp" />
     <ClCompile Include="src\Game.cpp" />
     <ClCompile Include="src\Main.cpp" />
+    <ClCompile Include="src\ModelLoader.cpp" />
     <ClCompile Include="src\Octree.cpp" />
+    <ClCompile Include="src\OpenGL.cpp" />
     <ClCompile Include="src\RaycasterTest.cpp" />
+    <ClCompile Include="src\Shader.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="h\Clock.h" />
     <ClInclude Include="h\Debug.h" />
     <ClInclude Include="h\Game.h" />
+    <ClInclude Include="h\Model.h" />
+    <ClInclude Include="h\ModelLoader.h" />
     <ClInclude Include="h\Octree.h" />
+    <ClInclude Include="h\OpenGL.h" />
     <ClInclude Include="h\RaycasterTest.h" />
+    <ClInclude Include="h\Shader.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="shaders\main.frag" />
+    <None Include="shaders\main.vert" />
+    <None Include="shaders\standard.frag" />
+    <None Include="shaders\standard.vert" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>

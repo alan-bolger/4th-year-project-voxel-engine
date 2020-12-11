@@ -15,9 +15,9 @@ Octree::Octree()
 /// <summary>
 /// Constructor for the Octree class.
 /// </summary>
-/// <param name="t_x">- Point X value.</param>
-/// <param name="t_y">- Point Y value.</param>
-/// <param name="t_z">- Point Z value.</param>
+/// <param name="t_x">Point X value.</param>
+/// <param name="t_y">Point Y value.</param>
+/// <param name="t_z">Point Z value.</param>
 Octree::Octree(int t_x, int t_y, int t_z)
 {
     m_point = new Point(t_x, t_y, t_z);
@@ -27,12 +27,12 @@ Octree::Octree(int t_x, int t_y, int t_z)
 /// Constructor for the Octree class.
 /// Creates an Octree with defined boundaries.
 /// </summary>
-/// <param name="t_x_1">- Point X value for boundary start.</param>
-/// <param name="t_y_1">- Point Y value for boundary start.</param>
-/// <param name="t_z_1">- Point Z value for boundary start.</param>
-/// <param name="t_x_2">- Point X value for boundary end.</param>
-/// <param name="t_y_2">- Point Y value for boundary end.</param>
-/// <param name="t_z_2">- Point Z value for boundary end.</param>
+/// <param name="t_x_1">Point X value for boundary start.</param>
+/// <param name="t_y_1">Point Y value for boundary start.</param>
+/// <param name="t_z_1">Point Z value for boundary start.</param>
+/// <param name="t_x_2">Point X value for boundary end.</param>
+/// <param name="t_y_2">Point Y value for boundary end.</param>
+/// <param name="t_z_2">Point Z value for boundary end.</param>
 Octree::Octree(int t_x_1, int t_y_1, int t_z_1, int t_x_2, int t_y_2, int t_z_2)
 {
     if (t_x_2 < t_x_1 || t_y_2 < t_y_1 || t_z_2 < t_z_1)
@@ -65,9 +65,9 @@ Octree::~Octree()
 /// <summary>
 /// Insert point.
 /// </summary>
-/// <param name="t_x">- Point X value.</param>
-/// <param name="t_y">- Point Y value.</param>
-/// <param name="t_z">- Point Z value.</param>
+/// <param name="t_x">Point X value.</param>
+/// <param name="t_y">Point Y value.</param>
+/// <param name="t_z">Point Z value.</param>
 void Octree::insert(int t_x, int t_y, int t_z)
 {
     // Check if the point already exists in the octree 
@@ -209,9 +209,9 @@ void Octree::insert(int t_x, int t_y, int t_z)
 /// <summary>
 /// Find point.
 /// </summary>
-/// <param name="t_x">- Point X value.</param>
-/// <param name="t_y">- Point Y value.</param>
-/// <param name="t_z">- Point Z value.</param>
+/// <param name="t_x">Point X value.</param>
+/// <param name="t_y">Point Y value.</param>
+/// <param name="t_z">Point Z value.</param>
 bool Octree::find(int t_x, int t_y, int t_z)
 {
     // Check if the point is out of bounds  
