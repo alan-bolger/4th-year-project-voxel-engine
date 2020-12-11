@@ -83,6 +83,9 @@
     <ClInclude Include="h\XboxOneController.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="h\stb_image.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="shaders\standard.frag">
@@ -91,10 +94,10 @@
     <None Include="shaders\standard.vert">
       <Filter>Shaders</Filter>
     </None>
-    <None Include="shaders\main.frag">
+    <None Include="shaders\passthrough.vert">
       <Filter>Shaders</Filter>
     </None>
-    <None Include="shaders\main.vert">
+    <None Include="shaders\passthrough.frag">
       <Filter>Shaders</Filter>
     </None>
   </ItemGroup>

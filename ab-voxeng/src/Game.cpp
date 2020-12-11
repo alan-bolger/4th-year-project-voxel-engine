@@ -22,7 +22,7 @@ Game::~Game()
 	SDL_DestroyWindow(m_window);
 	m_window = NULL;
 
-	delete m_shader;
+	delete m_mainShader;
 	
 	IMG_Quit();
 	SDL_Quit();
@@ -63,9 +63,15 @@ void Game::initialise()
 	glewExperimental = GL_TRUE;
 	auto init_res = glewInit();
 
+	// Activate super secret special OpenGL functions (not)
+	// Culling faces will increase performance by around 50%
+	// This should be disabled when drawing models that show front and back faces simultaneously
+	glEnable(GL_CULL_FACE);
+	glCullFace(GL_BACK);
+
 	// Console message
-	DEBUG_MSG("VoxGon v1.0");
-	DEBUG_MSG("By Alan 'Two Sheds' Bolger");
+	DEBUG_MSG("Voxel Engine");
+	DEBUG_MSG("By Alan Bolger");
 	DEBUG_MSG("----------------------------");
 	DEBUG_MSG(glGetString(GL_VENDOR));
 	DEBUG_MSG(glGetString(GL_RENDERER));
@@ -116,16 +122,17 @@ void Game::initialise()
 	m_camera = new ab::Camera(*m_controller);
 
 	// Shader
-	m_shader = new ab::Shader("shaders/main.vert", "shaders/main.frag");
+	m_mainShader = new ab::Shader("shaders/passthrough.vert", "shaders/passthrough.frag");
 
 	// Test model
-	ab::OpenGL::importModel("models/generic-block.obj", m_cube, false);
+	ab::OpenGL::importModel("models/generic-block.obj", m_cube, "models/grass-block.png");
 	m_cube.matrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
 
-	// MVP uniforms
-	m_shaderModelMatrixID = glGetUniformLocation(m_shader->m_programID, "model");
-	m_shaderViewMatrixID = glGetUniformLocation(m_shader->m_programID, "view");
-	m_shaderProjectionMatrixID = glGetUniformLocation(m_shader->m_programID, "projection");
+	// Uniforms for shader
+	m_shaderModelMatrixID = glGetUniformLocation(m_mainShader->m_programID, "model");
+	m_shaderViewMatrixID = glGetUniformLocation(m_mainShader->m_programID, "view");
+	m_shaderProjectionMatrixID = glGetUniformLocation(m_mainShader->m_programID, "projection");
+	m_diffuseTextureID = glGetUniformLocation(m_mainShader->m_programID, "diffuseTexture");
 }
 
 /// <summary>
@@ -180,7 +187,7 @@ void Game::draw()
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	// Activate shader
-	glUseProgram(m_shader->m_programID);
+	glUseProgram(m_mainShader->m_programID);
 
 	// Draw test cube
 	glUniformMatrix4fv(m_shaderModelMatrixID, 1, GL_FALSE, &m_cube.matrix[0][0]);

@@ -36,7 +36,7 @@ private:
 	bool m_looping;
 	ab::XboxOneController *m_controller;
 	ab::Camera *m_camera;
-	ab::Shader *m_shader;
+	ab::Shader *m_mainShader;
 	ab::Model m_cube;
 	glm::mat4 m_view;
 	glm::mat4 m_projection;
@@ -45,6 +45,7 @@ private:
 	GLuint m_shaderModelMatrixID;
 	GLuint m_shaderViewMatrixID;
 	GLuint m_shaderProjectionMatrixID;
+	GLuint m_diffuseTextureID;
 
 	void initialise();
 	void processEvents();
