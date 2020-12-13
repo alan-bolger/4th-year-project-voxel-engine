@@ -19,9 +19,9 @@ struct box
 
 const box boxes[] = 
 {
-    {vec3(-5.0, -0.1, -5.0), vec3(5.0, 0.0, 5.0)}, // Ground
-    {vec3(-0.5, 0.0, -0.5), vec3(0.5, 1.0, 0.5)}, // Box 1
+    {vec3(-5.0, -0.1, -5.0), vec3(5.0, 0.0, 5.0)}, // Ground    
     {vec3(-4.0, 0.0, -4.0), vec3(-3.0, 1.0, -3.0)}, // Box 2
+    {vec3(-0.5, 0.0, -0.5), vec3(0.5, 1.0, 0.5)}, // Box 1
     {vec3(3.0, 0.0, 3.0), vec3(4.0, 1.0, 4.0)}, // Box 3
 };
 
@@ -69,11 +69,11 @@ vec4 trace(vec3 origin, vec3 dir)
 
     if (intersectBoxes(origin, dir, i))
     {
-        vec4 gray = vec4(i.bi / 10.0 + 0.8);
+        vec4 gray = vec4(0.5, i.bi / 10.0 + 0.8, 0.5, 1.0);
         return vec4(gray.rgb, 1.0);
     }
 
-    return vec4(0.0, 0.0, 0.0, 1.0);
+    return vec4(0.0, 0.3, 0.0, 1.0);
 }
 
 layout (local_size_x = 16, local_size_y = 8) in;
@@ -85,7 +85,7 @@ void main(void)
     
     if (pix.x >= size.x || pix.y >= size.y) 
     {
-      return;
+        return;
     }
     
     vec2 pos = vec2(pix) / vec2(size.x - 1, size.y - 1);
