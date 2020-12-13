@@ -117,24 +117,20 @@ void ab::OpenGL::import(const char *t_modelFilename, ab::Model &t_model, std::st
 /// <summary>
 /// Draw model(s).
 /// You can ignore the last parameter if the model has no texture.
+/// If using a texture, it must be passed to a sampler2D in the fragment shader.
 /// </summary>
 /// <param name="t_model">The data struct that holds all model data.</param>
 /// <param name="t_shader">Shader class object.</param>
-/// <param name="t_uniformName>[OPTIONAL] The name of the uniform as it is in the shader. The model's texture gets sent to this uniform.</param>
+/// <param name="t_uniformName>[OPTIONAL] The name of the sampler2D uniform as it is in the shader. The model's texture gets sent to this uniform.</param>
 void ab::OpenGL::draw(Model &t_model, Shader *t_shader, std::string t_uniformName)
 {
-	if (t_shader != nullptr)
+	if (t_shader != nullptr && t_uniformName != "")
 	{
-		
-
-		if (t_uniformName != "")
-		{
-			glActiveTexture(GL_TEXTURE1);
-			glBindTexture(GL_TEXTURE_2D, t_model.diffuseTextureID);
-			glUniform1i(glGetUniformLocation(t_shader->m_programID, t_uniformName.c_str()), 1);
-		}
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, t_model.diffuseTextureID);
+		glUniform1i(glGetUniformLocation(t_shader->m_programID, t_uniformName.c_str()), 1);
 	}
-
+	
 	glBindVertexArray(t_model.vertexArrayObjectID);
 
 	if (t_model.instancingPositions.size() == 0)
@@ -152,11 +148,75 @@ void ab::OpenGL::draw(Model &t_model, Shader *t_shader, std::string t_uniformNam
 }
 
 /// <summary>
+/// Create framebuffer.
+/// </summary>
+/// <returns>Framebuffer ID.</returns>
+GLuint ab::OpenGL::createFBO(GLsizei t_width, GLsizei t_height)
+{
+	GLuint f_texture;
+
+	glGenTextures(1, &f_texture);
+
+	glBindTexture(GL_TEXTURE_2D, f_texture);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, t_width, t_height, 0, GL_RGBA, GL_FLOAT, 0);
+	glBindTexture(GL_TEXTURE_2D, 0);
+
+	return f_texture;
+}
+
+/// <summary>
+/// Next power of two utility function.
+/// </summary>
+/// <param name="t_x">Function uses this number as input.</param>
+/// <returns>The next power of two of the input value.</returns>
+int ab::OpenGL::nextPowerOfTwo(int t_x)
+{
+	t_x--;
+
+	t_x |= t_x >> 1; // handle 2 bit numbers
+	t_x |= t_x >> 2; // handle 4 bit numbers
+	t_x |= t_x >> 4; // handle 8 bit numbers
+	t_x |= t_x >> 8; // handle 16 bit numbers
+	t_x |= t_x >> 16; // handle 32 bit numbers
+
+	t_x++;
+
+	return t_x;
+}
+
+/// <summary>
+/// Uniform 3f
+/// </summary>
+/// <param name="t_shader">Shader class object.</param>
+/// <param name="t_uniformName">The name of the uniform as it is in the shader.</param>
+/// <param name="t_float_1">Float value 1.</param>
+/// <param name="t_float_2">Float value 2.</param>
+/// <param name="t_float_3">Float value 3.</param>
+void ab::OpenGL::uniform3f(Shader &t_shader, std::string t_uniformName, float t_float_1, float t_float_2, float t_float_3)
+{
+	glUniform3f(glGetUniformLocation(t_shader.m_programID, t_uniformName.c_str()), t_float_1, t_float_2, t_float_3);
+}
+
+/// <summary>
+/// 
+/// </summary>
+/// <param name="t_shader">Shader class object.</param>
+/// <param name="t_uniformName">The name of the uniform as it is in the shader.</param>
+/// <param name="t_int">Integer value.</param>
+void ab::OpenGL::uniform1i(Shader &t_shader, std::string t_uniformName, GLint t_int)
+{
+	glUniform1i(glGetUniformLocation(t_shader.m_programID, t_uniformName.c_str()), t_int);
+}
+
+/// <summary>
 /// Uniform 4fv
 /// </summary>
 /// <param name="t_shader">Shader class object.</param>
 /// <param name="t_uniformName">The name of the uniform as it is in the shader.</param>
-/// <param name="t_value">Points to the matrix that is to be passed to the specified shader uniform.</param>
+/// <param name="t_value">4x4 matrix.</param>
 void ab::OpenGL::uniformMatrix4fv(Shader &t_shader, std::string t_uniformName, GLfloat *t_value)
 {
 	glUniformMatrix4fv(glGetUniformLocation(t_shader.m_programID, t_uniformName.c_str()), 1, GL_FALSE, t_value);

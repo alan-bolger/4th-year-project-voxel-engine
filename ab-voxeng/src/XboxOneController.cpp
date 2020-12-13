@@ -3,21 +3,20 @@
 /// <summary>
 /// Constructor for the XboxOneController class.
 /// </summary>
+/// <param name="t_controllerIndex">The controller index.</param>
 ab::XboxOneController::XboxOneController(int t_controllerIndex) : m_controllerIndex(t_controllerIndex)
 {
-	std::cout << "XboxOneController constructor called" << std::endl;
-
 	// Check if a controller is connected
 	m_joystick = NULL;
 	m_joystick = SDL_GameControllerOpen(m_controllerIndex);
 
 	if (m_joystick == NULL)
 	{
-		std::cout << "Could not create XboxOneController->m_joystick at index " << m_controllerIndex << std::endl;
+		std::cout << "Could not create XboxOneController at index " << m_controllerIndex << std::endl;
 	}
 	else
 	{
-		std::cout << "Creating XboxOneController->m_joystick" << std::endl;
+		std::cout << "XboxOneController connected at index " << m_controllerIndex << std::endl;
 	}
 }
 
@@ -26,9 +25,6 @@ ab::XboxOneController::XboxOneController(int t_controllerIndex) : m_controllerIn
 /// </summary>
 ab::XboxOneController::~XboxOneController()
 {
-	std::cout << "XboxOneController destructor called" << std::endl;
-
-	std::cout << "Deleting XboxOneController->m_joystick" << std::endl;
 	SDL_GameControllerClose(m_joystick);
 	m_joystick = NULL;
 }

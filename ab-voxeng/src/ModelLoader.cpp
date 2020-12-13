@@ -3,6 +3,10 @@
 /// <summary>
 /// Find similar vertices.
 /// </summary>
+/// <param name="t_packedVert">A struct that holds vertex data.</param>
+/// <param name="t_vertexToOutIndex">A map that stores indices.</param>
+/// <param name="t_result">The result.</param>
+/// <returns>True if processing is successful.</returns>
 bool ab::ModelLoader::processVertices(PackedVertex &t_packedVert, std::map<PackedVertex, unsigned short> &t_vertexToOutIndex, unsigned short &t_result)
 {
 	std::map<PackedVertex, unsigned short>::iterator f_iterator = t_vertexToOutIndex.find(t_packedVert);
@@ -21,6 +25,13 @@ bool ab::ModelLoader::processVertices(PackedVertex &t_packedVert, std::map<Packe
 /// <summary>
 /// Create indices.
 /// </summary>
+/// <param name="t_inVertices">Vertices input.</param>
+/// <param name="t_inUvs">UVs input.</param>
+/// <param name="t_inNormals">Normals input.</param>
+/// <param name="t_outIndices">Indices output.</param>
+/// <param name="t_outVertices">Vertices output.</param>
+/// <param name="t_outUvs">UVs output.</param>
+/// <param name="t_outNormals">Normals output.</param>
 void ab::ModelLoader::indexer(std::vector<glm::vec3> &t_inVertices, std::vector<glm::vec2> &t_inUvs, std::vector<glm::vec3> &t_inNormals,
 	std::vector<unsigned short> &t_outIndices, std::vector<glm::vec3> &t_outVertices, std::vector<glm::vec2> &t_outUvs,
 	std::vector<glm::vec3> &t_outNormals)
@@ -51,8 +62,14 @@ void ab::ModelLoader::indexer(std::vector<glm::vec3> &t_inVertices, std::vector<
 }
 
 /// <summary>
-/// Load an .obj model file.
+/// Load OBJ file.
 /// </summary>
+/// <param name="t_path">Model file path.</param>
+/// <param name="t_outVertices">Vertices output.</param>
+/// <param name="t_outUvs">UVs output.</param>
+/// <param name="t_outNormals">Normals output.</param>
+/// <param name="t_indices">Indices output.</param>
+/// <returns>True if loading is successful.</returns>
 bool ab::ModelLoader::loadOBJ(const char *t_path, std::vector<glm::vec3> &t_outVertices, std::vector<glm::vec2> &t_outUvs,
 	std::vector<glm::vec3> &t_outNormals, std::vector<unsigned short> &t_indices)
 {

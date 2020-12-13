@@ -114,10 +114,6 @@ void Game::initialise()
 	m_frameMs = 1000.0f / m_frameRate;
 	m_looping = true;
 
-	// View and projection matrices
-	m_view = glm::mat4(1.0f);
-	m_projection = glm::perspective(45.0f, 16.0f / 9.0f, 1.0f, 1000.0f);
-
 	// Controller
 	m_controller = new ab::XboxOneController(0);
 
@@ -126,11 +122,24 @@ void Game::initialise()
 
 	// Shaders
 	m_mainShader = new ab::Shader("shaders/passthrough.vert", "shaders/passthrough.frag");
-	m_computeShader = new ab::Shader("shaders/computeTest.comp");
+	m_renderQuadShader = new ab::Shader("shaders/renderquad.vert", "shaders/renderquad.frag");
+	m_computeShader = new ab::Shader("shaders/raytracer.comp");
 
 	// Test model
 	ab::OpenGL::import("models/generic-block.obj", m_cube, "models/grass-block.png");
 	m_cube.matrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
+
+	// Raytracing stuff
+	m_FBOtextureID = ab::OpenGL::createFBO(1280, 720);
+	initialiseRaytracing();
+
+	// Bind quad VAO (this quad is used to render textures on)
+	glGenVertexArrays(1, &m_quadVertexArrayObjectID);
+	glBindVertexArray(m_quadVertexArrayObjectID);
+
+	glGenBuffers(1, &m_quadVertexBufferObjectID);
+	glBindBuffer(GL_ARRAY_BUFFER, m_quadVertexBufferObjectID);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(m_quadVertices), m_quadVertices, GL_STATIC_DRAW);
 }
 
 /// <summary>
@@ -170,7 +179,7 @@ void Game::update(double t_deltaTime)
 
 	// Update view and projection matrices
 	ab::OpenGL::uniformMatrix4fv(*m_mainShader, "view", &m_camera->getView()[0][0]);
-	ab::OpenGL::uniformMatrix4fv(*m_mainShader, "projection", &m_projection[0][0]);
+	ab::OpenGL::uniformMatrix4fv(*m_mainShader, "projection", &m_camera->getProjection()[0][0]);
 }
 
 /// <summary>
@@ -182,12 +191,94 @@ void Game::draw()
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	// Activate shader
-	glUseProgram(m_mainShader->m_programID);
+	// glUseProgram(m_mainShader->m_programID);
 
 	// Draw test cube
-	ab::OpenGL::uniformMatrix4fv(*m_mainShader, "model", &m_cube.matrix[0][0]);
-	ab::OpenGL::draw(m_cube, m_mainShader, "diffuseTexture");
+	// ab::OpenGL::uniformMatrix4fv(*m_mainShader, "model", &m_cube.matrix[0][0]);
+	// ab::OpenGL::draw(m_cube, m_mainShader, "diffuseTexture");
+
+	raytrace();
 	
 	// Display everything
 	SDL_GL_SwapWindow(m_window);
+}
+
+/// <summary>
+/// Initialises the compute shader.
+/// </summary>
+void Game::initialiseRaytracing()
+{
+	glUseProgram(m_computeShader->m_programID);
+
+	GLint workGroupSize[3];
+	glGetProgramiv(m_computeShader->m_programID, GL_COMPUTE_WORK_GROUP_SIZE, workGroupSize);
+	m_workGroupSizeX = workGroupSize[0];
+	m_workGroupSizeY = workGroupSize[1];
+
+	glUseProgram(0);
+}
+
+/// <summary>
+/// Perform raytracing.
+/// </summary>
+void Game::raytrace()
+{
+	glUseProgram(m_computeShader->m_programID);
+
+	// Set viewing frustum corner rays in shader
+	ab::OpenGL::uniform3f(*m_computeShader, "eye", m_camera->getEye().x, m_camera->getEye().y, m_camera->getEye().z);	
+
+	m_camera->getEyeRay(-1, -1, eyeRay);
+	ab::OpenGL::uniform3f(*m_computeShader, "ray00", eyeRay.x, eyeRay.y, eyeRay.z);
+
+	m_camera->getEyeRay(-1, 1, eyeRay);
+	ab::OpenGL::uniform3f(*m_computeShader, "ray01", eyeRay.x, eyeRay.y, eyeRay.z);
+
+	m_camera->getEyeRay(1, -1, eyeRay);
+	ab::OpenGL::uniform3f(*m_computeShader, "ray10", eyeRay.x, eyeRay.y, eyeRay.z);
+
+	m_camera->getEyeRay(1, 1, eyeRay);
+	ab::OpenGL::uniform3f(*m_computeShader, "ray11", eyeRay.x, eyeRay.y, eyeRay.z);
+
+	// Bind level 0 of framebuffer texture as writable image in the shader
+	glBindImageTexture(0, m_FBOtextureID, 0, false, 0, GL_WRITE_ONLY, GL_RGBA32F);
+
+	// Compute appropriate invocation dimension
+	int worksizeX = ab::OpenGL::nextPowerOfTwo(1280);
+	int worksizeY = ab::OpenGL::nextPowerOfTwo(720);
+
+	// Invoke the compute shader
+	glDispatchCompute(worksizeX / m_workGroupSizeX, worksizeY / m_workGroupSizeY, 1);
+
+	// Reset image binding
+	glBindImageTexture(0, 0, 0, false, 0, GL_READ_WRITE, GL_RGBA32F);
+	glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
+	glUseProgram(0);
+
+	// Render image on a quad
+	renderTextureToQuad();
+}
+
+/// <summary>
+/// Draw a quad and render a texture to it.
+/// </summary>
+void Game::renderTextureToQuad()
+{
+	glUseProgram(m_renderQuadShader->m_programID);
+
+	// Bind our texture in texture unit 1 and set shader to use texture unit 1
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, m_FBOtextureID);
+	ab::OpenGL::uniform1i(*m_renderQuadShader, "uniformTexture", 1);
+
+	// Vertex buffer object
+	glEnableVertexAttribArray(0);
+	glBindBuffer(GL_ARRAY_BUFFER, m_quadVertexBufferObjectID);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
+
+	// Draw
+	glDrawArrays(GL_TRIANGLES, 0, 6);
+
+	// Disable vertex attribute array
+	glDisableVertexAttribArray(0);
 }

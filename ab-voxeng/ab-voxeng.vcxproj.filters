@@ -27,9 +27,6 @@
     <ClCompile Include="src\Octree.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\RaycasterTest.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\Clock.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -59,9 +56,6 @@
     <ClInclude Include="h\Octree.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="h\RaycasterTest.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="h\Clock.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -88,19 +82,19 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="shaders\standard.frag">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="shaders\standard.vert">
-      <Filter>Shaders</Filter>
-    </None>
     <None Include="shaders\passthrough.vert">
       <Filter>Shaders</Filter>
     </None>
     <None Include="shaders\passthrough.frag">
       <Filter>Shaders</Filter>
     </None>
-    <None Include="shaders\computeTest.comp">
+    <None Include="shaders\raytracer.comp">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="shaders\renderquad.frag">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="shaders\renderquad.vert">
       <Filter>Shaders</Filter>
     </None>
   </ItemGroup>

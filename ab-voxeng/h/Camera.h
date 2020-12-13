@@ -16,13 +16,17 @@ namespace ab
 		~Camera();
 		void camera(glm::vec3 t_eye, double t_pitch, double t_yaw);
 		glm::mat4 getView();
+		glm::mat4 getProjection();
 		glm::vec3 getDirection();
 		glm::vec3 getEye();
+		void getEyeRay(float t_x, float t_y, glm::vec3 &t_result);
 		void update(double t_deltaTime);
 
 	private:
 		XboxOneController &m_controller;
 		glm::mat4 m_viewMatrix;
+		glm::mat4 m_projectionMatrix;
+		glm::mat4 m_inverseViewMatrix;
 		glm::vec3 m_eye;
 		glm::mat4 m_rotationMatrix;
 		glm::vec4 m_direction{ 0.f, 0.f, 1.f, 0.f }; // Direction that the camera is facing

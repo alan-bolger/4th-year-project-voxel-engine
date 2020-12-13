@@ -39,7 +39,7 @@ namespace ab
 		void processEvents(SDL_Event& t_event);
 
 	private:
-		SDL_GameController* m_joystick;
+		SDL_GameController *m_joystick;
 		const int JOYSTICK_DEAD_ZONE = 8000;
 		int m_controllerIndex;
 	};

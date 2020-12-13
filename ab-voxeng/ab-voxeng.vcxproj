@@ -26,7 +26,6 @@
     <ClCompile Include="src\ModelLoader.cpp" />
     <ClCompile Include="src\Octree.cpp" />
     <ClCompile Include="src\OpenGL.cpp" />
-    <ClCompile Include="src\RaycasterTest.cpp" />
     <ClCompile Include="src\Shader.cpp" />
     <ClCompile Include="src\XboxOneController.cpp" />
   </ItemGroup>
@@ -39,17 +38,16 @@
     <ClInclude Include="h\ModelLoader.h" />
     <ClInclude Include="h\Octree.h" />
     <ClInclude Include="h\OpenGL.h" />
-    <ClInclude Include="h\RaycasterTest.h" />
     <ClInclude Include="h\Shader.h" />
     <ClInclude Include="h\stb_image.h" />
     <ClInclude Include="h\XboxOneController.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="shaders\computeTest.comp" />
     <None Include="shaders\passthrough.frag" />
     <None Include="shaders\passthrough.vert" />
-    <None Include="shaders\standard.frag" />
-    <None Include="shaders\standard.vert" />
+    <None Include="shaders\raytracer.comp" />
+    <None Include="shaders\renderquad.frag" />
+    <None Include="shaders\renderquad.vert" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
