@@ -100,5 +100,8 @@
     <None Include="shaders\passthrough.frag">
       <Filter>Shaders</Filter>
     </None>
+    <None Include="shaders\computeTest.comp">
+      <Filter>Shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>

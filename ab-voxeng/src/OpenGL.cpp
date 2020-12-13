@@ -2,18 +2,20 @@
 
 /// <summary>
 /// Import a model.
+/// Only OBJ is currently supported.
 /// If the t_model.instancingPositions array is empty, then the instance array buffer won't be used.
+/// You can ignore the last parameter if there's no texture needed.
 /// </summary>
 /// <param name="t_modelFilename">The filename (including path) of the OBJ file.</param>
 /// <param name="t_model">The data struct that stores the IDs and arrays for the model.</param>
 /// <param name="t_diffuseTextureFilename">[OPTIONAL] The filename (including path) of the model's texture.</param>
-void ab::OpenGL::importModel(const char *t_modelFilename, Model &t_model, std::string t_diffuseTextureFilename)
+void ab::OpenGL::import(const char *t_modelFilename, ab::Model &t_model, std::string t_diffuseTextureFilename)
 {
 	// If a filename is provided, then attempt to load a texture
 	if (t_diffuseTextureFilename != "")
 	{
 		// This is used to hold the texture data
-		unsigned char* f_data;
+		unsigned char *f_data;
 
 		// Width, height, texture component and colour type
 		int f_width;
@@ -32,7 +34,13 @@ void ab::OpenGL::importModel(const char *t_modelFilename, Model &t_model, std::s
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 
+		glBindTexture(GL_TEXTURE_2D, 0);
+
 		stbi_image_free(f_data); // Unload data from CPU as it's on the GPU now
+	}
+	else
+	{
+		std::cout << "No texture was provided so no attempt was made to load one" << std::endl;
 	}
 	
 	// Load OBJ file
@@ -107,33 +115,49 @@ void ab::OpenGL::importModel(const char *t_modelFilename, Model &t_model, std::s
 }
 
 /// <summary>
-/// Draw a single model.
+/// Draw model(s).
+/// You can ignore the last parameter if the model has no texture.
 /// </summary>
 /// <param name="t_model">The data struct that holds all model data.</param>
-void ab::OpenGL::drawModel(Model &t_model)
+/// <param name="t_shader">Shader class object.</param>
+/// <param name="t_uniformName>[OPTIONAL] The name of the uniform as it is in the shader. The model's texture gets sent to this uniform.</param>
+void ab::OpenGL::draw(Model &t_model, Shader *t_shader, std::string t_uniformName)
 {
+	if (t_shader != nullptr)
+	{
+		
+
+		if (t_uniformName != "")
+		{
+			glActiveTexture(GL_TEXTURE1);
+			glBindTexture(GL_TEXTURE_2D, t_model.diffuseTextureID);
+			glUniform1i(glGetUniformLocation(t_shader->m_programID, t_uniformName.c_str()), 1);
+		}
+	}
+
 	glBindVertexArray(t_model.vertexArrayObjectID);
 
-	//glActiveTexture(GL_TEXTURE0);
-	//glBindTexture(GL_TEXTURE_2D, t_model.diffuseTextureID);
+	if (t_model.instancingPositions.size() == 0)
+	{		
+		glDrawElements(GL_TRIANGLES, t_model.indices.size(), GL_UNSIGNED_SHORT, (void*)0);
+	}
+	else
+	{
+		glBindBuffer(GL_ARRAY_BUFFER, t_model.instanceBufferID);
+		glDrawElementsInstanced(GL_TRIANGLES, t_model.indices.size(), GL_UNSIGNED_SHORT, (void*)0, t_model.instancingPositions.size());
+	}
 
-	glDrawElements(GL_TRIANGLES, t_model.indices.size(), GL_UNSIGNED_SHORT, (void*)0);
-
+	glActiveTexture(GL_TEXTURE0);
 	glBindVertexArray(0);
 }
 
 /// <summary>
-/// Draw a model using instancing.
-/// Instancing positions are stored in the t_model object as t_model.instancingPositions.
+/// Uniform 4fv
 /// </summary>
-/// <param name="t_model">The data struct that holds all model data.</param>
-/// <param name="t_amount">This is the number of models you want to draw in one instance.</param>
-void ab::OpenGL::drawModelsInstanced(Model &t_model)
+/// <param name="t_shader">Shader class object.</param>
+/// <param name="t_uniformName">The name of the uniform as it is in the shader.</param>
+/// <param name="t_value">Points to the matrix that is to be passed to the specified shader uniform.</param>
+void ab::OpenGL::uniformMatrix4fv(Shader &t_shader, std::string t_uniformName, GLfloat *t_value)
 {
-	glBindVertexArray(t_model.vertexArrayObjectID);
-
-	glBindBuffer(GL_ARRAY_BUFFER, t_model.instanceBufferID);
-	glDrawElementsInstanced(GL_TRIANGLES, t_model.indices.size(), GL_UNSIGNED_SHORT, (void*)0, t_model.instancingPositions.size());
-
-	glBindVertexArray(0);
+	glUniformMatrix4fv(glGetUniformLocation(t_shader.m_programID, t_uniformName.c_str()), 1, GL_FALSE, t_value);
 }

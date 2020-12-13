@@ -28,9 +28,9 @@ namespace ab
 		glm::vec4 m_direction{ 0.f, 0.f, 1.f, 0.f }; // Direction that the camera is facing
 		glm::vec4 m_directionStrafe{ 1.0f, 0.f, 0.f, 0.f };
 		glm::vec4 m_directionVerticalStrafe{ 0.0f, 1.f, 0.f, 0.f }; // Only used for debug purposes
-		float m_speed = 0.5f;
-		float m_turnSpeed = 10.0f;
-		float m_pitchSpeed = 10.0f;
+		float m_speed = 0.005f;
+		float m_turnSpeed = 0.1f;
+		float m_pitchSpeed = 0.1f;
 		double m_yaw{ 0.0 }; // In degrees
 		double m_pitch{ 0.0 }; // In degrees
 	};

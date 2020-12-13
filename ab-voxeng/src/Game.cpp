@@ -22,7 +22,10 @@ Game::~Game()
 	SDL_DestroyWindow(m_window);
 	m_window = NULL;
 
+	delete m_controller;
+	delete m_camera;
 	delete m_mainShader;
+	delete m_computeShader;
 	
 	IMG_Quit();
 	SDL_Quit();
@@ -45,7 +48,7 @@ void Game::start()
 		SDL_Delay((Uint32)f_delayMs);
 
 		processEvents();
-		update(f_delayMs / 100);
+		update(f_delayMs);
 		draw();
 	}
 }
@@ -63,9 +66,9 @@ void Game::initialise()
 	glewExperimental = GL_TRUE;
 	auto init_res = glewInit();
 
-	// Activate super secret special OpenGL functions (not)
-	// Culling faces will increase performance by around 50%
-	// This should be disabled when drawing models that show front and back faces simultaneously
+	// Activate super secret top quality extreme supreme ultimate special OpenGL functions
+	// Culling faces will increase performance by around 50000000%
+	// All joking aside though, this should be disabled when drawing models that show front and back faces simultaneously
 	glEnable(GL_CULL_FACE);
 	glCullFace(GL_BACK);
 
@@ -113,7 +116,7 @@ void Game::initialise()
 
 	// View and projection matrices
 	m_view = glm::mat4(1.0f);
-	m_projection = glm::perspective(45.0f, 4.0f / 3.0f, 1.0f, 1000.0f);
+	m_projection = glm::perspective(45.0f, 16.0f / 9.0f, 1.0f, 1000.0f);
 
 	// Controller
 	m_controller = new ab::XboxOneController(0);
@@ -121,18 +124,13 @@ void Game::initialise()
 	// Camera
 	m_camera = new ab::Camera(*m_controller);
 
-	// Shader
+	// Shaders
 	m_mainShader = new ab::Shader("shaders/passthrough.vert", "shaders/passthrough.frag");
+	m_computeShader = new ab::Shader("shaders/computeTest.comp");
 
 	// Test model
-	ab::OpenGL::importModel("models/generic-block.obj", m_cube, "models/grass-block.png");
+	ab::OpenGL::import("models/generic-block.obj", m_cube, "models/grass-block.png");
 	m_cube.matrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
-
-	// Uniforms for shader
-	m_shaderModelMatrixID = glGetUniformLocation(m_mainShader->m_programID, "model");
-	m_shaderViewMatrixID = glGetUniformLocation(m_mainShader->m_programID, "view");
-	m_shaderProjectionMatrixID = glGetUniformLocation(m_mainShader->m_programID, "projection");
-	m_diffuseTextureID = glGetUniformLocation(m_mainShader->m_programID, "diffuseTexture");
 }
 
 /// <summary>
@@ -170,11 +168,9 @@ void Game::update(double t_deltaTime)
 	// Update camera and controls
 	m_camera->update(t_deltaTime);
 
-	// Update view matrix from camera
-	glUniformMatrix4fv(m_shaderViewMatrixID, 1, GL_FALSE, &m_camera->getView()[0][0]);
-
-	// Update projection matrix
-	glUniformMatrix4fv(m_shaderProjectionMatrixID, 1, GL_FALSE, &m_projection[0][0]);
+	// Update view and projection matrices
+	ab::OpenGL::uniformMatrix4fv(*m_mainShader, "view", &m_camera->getView()[0][0]);
+	ab::OpenGL::uniformMatrix4fv(*m_mainShader, "projection", &m_projection[0][0]);
 }
 
 /// <summary>
@@ -183,17 +179,14 @@ void Game::update(double t_deltaTime)
 void Game::draw()
 {
 	// Clear screen
-	// glViewport(0, 0, 1280, 720);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	// Activate shader
 	glUseProgram(m_mainShader->m_programID);
 
 	// Draw test cube
-	glUniformMatrix4fv(m_shaderModelMatrixID, 1, GL_FALSE, &m_cube.matrix[0][0]);
-
-	// Draw
-	ab::OpenGL::drawModel(m_cube);
+	ab::OpenGL::uniformMatrix4fv(*m_mainShader, "model", &m_cube.matrix[0][0]);
+	ab::OpenGL::draw(m_cube, m_mainShader, "diffuseTexture");
 	
 	// Display everything
 	SDL_GL_SwapWindow(m_window);

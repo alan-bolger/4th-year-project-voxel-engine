@@ -45,6 +45,7 @@
     <ClInclude Include="h\XboxOneController.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="shaders\computeTest.comp" />
     <None Include="shaders\passthrough.frag" />
     <None Include="shaders\passthrough.vert" />
     <None Include="shaders\standard.frag" />

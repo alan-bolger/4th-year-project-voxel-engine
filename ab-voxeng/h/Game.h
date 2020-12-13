@@ -37,6 +37,7 @@ private:
 	ab::XboxOneController *m_controller;
 	ab::Camera *m_camera;
 	ab::Shader *m_mainShader;
+	ab::Shader *m_computeShader;
 	ab::Model m_cube;
 	glm::mat4 m_view;
 	glm::mat4 m_projection;
