@@ -142,8 +142,8 @@ float ShadowCalculation(vec4 fragPosLightSpace, vec3 lightDir, vec3 normal)
 
     float cosTheta = dot(normal, lightDir);
     cosTheta = clamp(cosTheta, 0, 1);
-    float bias = 0.005*tan(acos(cosTheta)); // cosTheta is dot( n,l ), clamped between 0 and 1
-    bias = clamp(bias, 0,0.01);
+    float bias = 0.005 * tan(acos(cosTheta)); // cosTheta is dot( n,l ), clamped between 0 and 1
+    bias = clamp(bias, 0, 0.01);
     float shadow = currentDepth - bias > closestDepth  ? 1.0 : 0.0;
 
     vec2 texelSize = 1.0 / textureSize(shadowMap, 0);

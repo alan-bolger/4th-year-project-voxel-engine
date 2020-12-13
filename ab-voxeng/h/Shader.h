@@ -16,12 +16,14 @@ namespace ab
 		GLuint m_programID;
 
 		Shader(const std::string &t_vertShader, const std::string &t_fragShader);
+		Shader(const std::string &t_computeShader);
 		~Shader();
 
 	private:
 		std::string readFile(const std::string &t_filePath);
 		GLuint compileShader(GLuint t_type, const std::string &t_source);
 		void createShader(const std::string &t_vertShader, const std::string &t_fragShader);
+		void createShader(const std::string &t_computeShader);
 	};
 }
 
