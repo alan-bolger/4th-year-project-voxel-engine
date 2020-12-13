@@ -15,12 +15,14 @@ namespace ab
 	public:
 		static void import(const char *t_modelFilename, ab::Model &t_model, std::string t_diffuseTextureFilename = "");
 		static void draw(ab::Model &t_model, Shader *t_shader, std::string t_uniformName = "");
+		static GLuint createFBO(GLsizei t_width, GLsizei t_height);
+		static int nextPowerOfTwo(int x);
 
 		static void uniform1f(Shader &t_shader, std::string t_uniformName, float t_float);
 		static void uniform2f(Shader &t_shader, std::string t_uniformName, float t_float_1, float t_float_2);
 		static void uniform3f(Shader &t_shader, std::string t_uniformName, float t_float_1, float t_float_2, float t_float_3);
 		static void uniform4f(Shader &t_shader, std::string t_uniformName, float t_float_1, float t_float_2, float t_float_3, float t_float_4);
-		static void uniform1i(Shader &t_shader, std::string t_uniformName);
+		static void uniform1i(Shader &t_shader, std::string t_uniformName, GLint t_int);
 		static void uniform2i(Shader &t_shader, std::string t_uniformName);
 		static void uniform3i(Shader &t_shader, std::string t_uniformName);
 		static void uniform4i(Shader &t_shader, std::string t_uniformName);		

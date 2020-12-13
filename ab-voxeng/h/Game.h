@@ -29,7 +29,6 @@ public:
 
 private:
 	SDL_Window *m_window;
-	//SDL_Renderer *m_renderer;
 	SDL_GLContext m_glContext;
 	double m_frameRate;
 	double m_frameMs;
@@ -37,21 +36,40 @@ private:
 	ab::XboxOneController *m_controller;
 	ab::Camera *m_camera;
 	ab::Shader *m_mainShader;
+	ab::Shader *m_renderQuadShader;
 	ab::Shader *m_computeShader;
 	ab::Model m_cube;
-	glm::mat4 m_view;
-	glm::mat4 m_projection;
 
-	// Shader uniform IDs
-	GLuint m_shaderModelMatrixID;
-	GLuint m_shaderViewMatrixID;
-	GLuint m_shaderProjectionMatrixID;
-	GLuint m_diffuseTextureID;
+	// Quad for render to texture
+	GLuint m_quadVertexArrayObjectID;
+	GLuint m_quadVertexBufferObjectID;
+
+	// These vertices are used to draw a quad
+	// The quad is used for rendering to a texture
+	GLfloat m_quadVertices[18] =
+	{
+		-1.0f, -1.0f, 0.0f,
+		 1.0f, -1.0f, 0.0f,
+		-1.0f,  1.0f, 0.0f,
+		-1.0f,  1.0f, 0.0f,
+		 1.0f, -1.0f, 0.0f,
+		 1.0f,  1.0f, 0.0f,
+	};
+
+	// Compute shader stuff
+	GLint m_workGroupSizeX;
+	GLint m_workGroupSizeY;
+	GLuint m_frameBufferID;
+	GLuint m_FBOtextureID;
+	glm::vec3 eyeRay;
 
 	void initialise();
 	void processEvents();
 	void update(double t_deltaTime);
 	void draw();
+	void initialiseRaytracing();
+	void raytrace();
+	void renderTextureToQuad();
 };
 
 #endif // !GAME_H

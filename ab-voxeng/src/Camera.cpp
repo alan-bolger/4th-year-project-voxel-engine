@@ -3,9 +3,11 @@
 /// <summary>
 /// Constructor for the Camera class.
 /// </summary>
+/// <param name="t_controller">An XboxOneController class object.</param>
 ab::Camera::Camera(XboxOneController &t_controller) : m_controller(t_controller)
 {
-	m_eye = glm::vec3(0.0f, 0.0f, 5.0f);
+	m_eye = glm::vec3(0.0f, 1.5f, 10.0f);
+	m_projectionMatrix = glm::perspective(45.0f, 16.0f / 9.0f, 1.0f, 1000.0f);
 }
 
 /// <summary>
@@ -20,8 +22,8 @@ ab::Camera::~Camera()
 /// This function updates a 4x4 matrix with the current view.
 /// </summary>
 /// <param name="t_eye">This is the position of the center of the camera.</param>
-/// <param name="t_pitch">Pitch is used to look up and down.</param>
-/// <param name="t_yaw">Yaw is used to rotate left and right.</param>
+/// <param name="t_pitch">Pitch is used to look up and down and is in degrees.</param>
+/// <param name="t_yaw">Yaw is used to rotate left and right and is in degrees.</param>
 void ab::Camera::camera(glm::vec3 t_eye, double t_pitch, double t_yaw)
 {
 	double f_cosPitch = cos(glm::radians(t_pitch));
@@ -46,14 +48,25 @@ void ab::Camera::camera(glm::vec3 t_eye, double t_pitch, double t_yaw)
 /// <summary>
 /// Get the current view.
 /// </summary>
+/// <returns>A 4x4 view matrix.</returns>
 glm::mat4 ab::Camera::getView()
 {
 	return m_viewMatrix;
 }
 
 /// <summary>
+/// Get the current projection.
+/// </summary>
+/// <returns>A 4x4 projection matrix.</returns>
+glm::mat4 ab::Camera::getProjection()
+{
+	return m_projectionMatrix;
+}
+
+/// <summary>
 /// Get the current camera direction.
 /// </summary>
+/// <returns>A directional vec3.</returns>
 glm::vec3 ab::Camera::getDirection()
 {
 	return glm::vec3(m_direction.x, m_direction.y, m_direction.z);
@@ -62,9 +75,27 @@ glm::vec3 ab::Camera::getDirection()
 /// <summary>
 /// Get the current camera center position.
 /// </summary>
+/// <returns>The position of the camera.</returns>
 glm::vec3 ab::Camera::getEye()
 {
 	return m_eye;
+}
+
+/// <summary>
+/// Compute the world direction vector.
+/// </summary>
+/// <param name="t_x">The X coordinate within [-1..1].</param>
+/// <param name="t_y">The Y coordinate within [-1..1].</param>
+/// <param name="t_result">This final result of the calculation.</param>
+void ab::Camera::getEyeRay(float t_x, float t_y, glm::vec3 &t_result)
+{
+	glm::vec4 f_temp_1 = glm::vec4(t_x, t_y, 0.0f, 1.0f);
+	m_inverseViewMatrix = m_projectionMatrix * m_viewMatrix;
+	m_inverseViewMatrix = glm::inverse(m_inverseViewMatrix);
+	f_temp_1 = m_inverseViewMatrix * f_temp_1;
+	f_temp_1 = f_temp_1 * (1.0f / f_temp_1.w);
+	glm::vec3 f_temp_2 = glm::vec3(f_temp_1.x, f_temp_1.y, f_temp_1.z);
+	t_result = f_temp_2 - m_eye;
 }
 
 /// <summary>
