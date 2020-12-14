@@ -3,7 +3,7 @@
 /// <summary>
 /// Constructor for the Noise class.
 /// </summary>
-Noise::Noise()
+ab::Noise::Noise()
 {
 	initialise();
 }
@@ -11,7 +11,7 @@ Noise::Noise()
 /// <summary>
 /// Destructor for the Noise class.
 /// </summary>
-Noise::~Noise()
+ab::Noise::~Noise()
 {
 	
 }
@@ -19,7 +19,7 @@ Noise::~Noise()
 /// <summary>
 /// Initialise the Noise class.
 /// </summary>
-void Noise::initialise()
+void ab::Noise::initialise()
 {
 	// This seed can be used to regenerate the exact same world every time
 	std::srand(12345);
@@ -34,7 +34,7 @@ void Noise::initialise()
 /// Floor function (faster than the standard floor function).
 /// </summary>
 /// <returns>The result of the floor function.</returns>
-int Noise::fastFloor(double t_x)
+int ab::Noise::fastFloor(double t_x)
 {
 	return t_x > 0 ? (int)t_x : (int)t_x - 1;
 }
@@ -43,7 +43,7 @@ int Noise::fastFloor(double t_x)
 /// Dot product (2D vector).
 /// </summary>
 /// <returns>The result of the dot product.</returns>
-double Noise::dot(int t_g[], double t_x, double t_y)
+double ab::Noise::dot(int t_g[], double t_x, double t_y)
 {
 	return t_g[0] * t_x + t_g[1] * t_y;
 }
@@ -52,7 +52,7 @@ double Noise::dot(int t_g[], double t_x, double t_y)
 /// Dot product (3D vector).
 /// </summary>
 /// <returns>The result of the dot product.</returns>
-double Noise::dot(int t_g[], double t_x, double t_y, double t_z)
+double ab::Noise::dot(int t_g[], double t_x, double t_y, double t_z)
 {
 	return t_g[0] * t_x + t_g[1] * t_y + t_g[2] * t_z;
 }
@@ -61,7 +61,7 @@ double Noise::dot(int t_g[], double t_x, double t_y, double t_z)
 /// Dot product (4D vector).
 /// </summary>
 /// <returns>The result of the dot product.</returns>
-double Noise::dot(int t_g[], double t_x, double t_y, double t_z, double t_w)
+double ab::Noise::dot(int t_g[], double t_x, double t_y, double t_z, double t_w)
 {
 	return t_g[0] * t_x + t_g[1] * t_y + t_g[2] * t_z + t_g[3] * t_w;
 }
@@ -72,7 +72,7 @@ double Noise::dot(int t_g[], double t_x, double t_y, double t_z, double t_w)
 /// <param name="t_xin">The range's lowest value.</param>
 /// <param name="t_yin">The range's highest value.</param>
 /// <returns>The resulting noise value.</returns>
-double Noise::noise(double t_xin, double t_yin)
+double ab::Noise::noise(double t_xin, double t_yin)
 {
 	// Noise contributions from the three corners
 	double n0;
@@ -185,7 +185,7 @@ double Noise::noise(double t_xin, double t_yin)
 /// <param name="t_min">The minimum number in the range.</param>
 /// <param name="t_max">The maximum number in the range.</param>
 /// <returns>The normalised value.</returns>
-float Noise::normaliseToRange(float t_value, float t_min, float t_max)
+float ab::Noise::normaliseToRange(float t_value, float t_min, float t_max)
 {
 	return (t_value - t_min) / (t_max - t_min);
 }

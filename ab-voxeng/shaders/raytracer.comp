@@ -15,14 +15,31 @@ struct box
 };
 
 #define MAX_SCENE_BOUNDS 100.0
-#define NUM_BOXES 4
+#define NUM_BOXES 19
+
+vec3 boundingBoxSize = vec3(0.5, 0.5, 0.5);
 
 const box boxes[] = 
 {
-    {vec3(-5.0, -0.1, -5.0), vec3(5.0, 0.0, 5.0)}, // Ground    
-    {vec3(-4.0, 0.0, -4.0), vec3(-3.0, 1.0, -3.0)}, // Box 2
-    {vec3(-0.5, 0.0, -0.5), vec3(0.5, 1.0, 0.5)}, // Box 1
-    {vec3(3.0, 0.0, 3.0), vec3(4.0, 1.0, 4.0)}, // Box 3
+    {vec3(-10, 0, -10), vec3(10, 1, 10)},  
+    {vec3(-6, 2, -6) - boundingBoxSize, vec3(-6, 2, -6) + boundingBoxSize},
+    {vec3(-3, 2, -6) - boundingBoxSize, vec3(-3, 2, -6) + boundingBoxSize},  
+    {vec3(0, 2, -6) - boundingBoxSize, vec3(0, 2, -6) + boundingBoxSize},
+    {vec3(3, 2, -6) - boundingBoxSize, vec3(3, 2, -6) + boundingBoxSize},  
+    {vec3(6, 2, -6) - boundingBoxSize, vec3(6, 2, -6) + boundingBoxSize},
+    {vec3(-4.5, 4, -6) - boundingBoxSize, vec3(-4.5, 4, -6) + boundingBoxSize},
+    {vec3(-1.5, 4, -6) - boundingBoxSize, vec3(-1.5, 4, -6) + boundingBoxSize},
+    {vec3(1.5, 4, -6) - boundingBoxSize, vec3(1.5, 4, -6) + boundingBoxSize},
+    {vec3(4.5, 4, -6) - boundingBoxSize, vec3(4.5, 4, -6) + boundingBoxSize},
+    {vec3(-3.0, 6, -6) - boundingBoxSize, vec3(-3.0, 6, -6) + boundingBoxSize},
+    {vec3(0.0, 6, -6) - boundingBoxSize, vec3(0.0, 6, -6) + boundingBoxSize},
+    {vec3(3.0, 6, -6) - boundingBoxSize, vec3(3.0, 6, -6) + boundingBoxSize},
+    {vec3(-1.5, 8, -6) - boundingBoxSize, vec3(-1.5, 8, -6) + boundingBoxSize},
+    {vec3(1.5, 8, -6) - boundingBoxSize, vec3(1.5, 8, -6) + boundingBoxSize},
+    {vec3(0.0, 10.0, -6) - boundingBoxSize, vec3(0.0, 10.0, -6) + boundingBoxSize},
+    {vec3(-6, 2, 4) - boundingBoxSize, vec3(-6, 2, 4) + boundingBoxSize},
+    {vec3(6, 2, 4) - boundingBoxSize, vec3(6, 2, 4) + boundingBoxSize},  
+    {vec3(0.0, 2, 6) - boundingBoxSize, vec3(0.0, 2, 6) + boundingBoxSize},  
 };
 
 struct hitinfo 
