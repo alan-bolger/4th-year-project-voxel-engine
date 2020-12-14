@@ -28,6 +28,7 @@
     <ClCompile Include="src\Octree.cpp" />
     <ClCompile Include="src\OpenGL.cpp" />
     <ClCompile Include="src\Shader.cpp" />
+    <ClCompile Include="src\Terrain.cpp" />
     <ClCompile Include="src\XboxOneController.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -42,6 +43,7 @@
     <ClInclude Include="h\OpenGL.h" />
     <ClInclude Include="h\Shader.h" />
     <ClInclude Include="h\stb_image.h" />
+    <ClInclude Include="h\Terrain.h" />
     <ClInclude Include="h\XboxOneController.h" />
   </ItemGroup>
   <ItemGroup>

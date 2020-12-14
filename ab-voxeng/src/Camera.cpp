@@ -6,7 +6,7 @@
 /// <param name="t_controller">An XboxOneController class object.</param>
 ab::Camera::Camera(XboxOneController &t_controller) : m_controller(t_controller)
 {
-	m_eye = glm::vec3(0.0f, 1.5f, 10.0f);
+	m_eye = glm::vec3(0.0f, 4.0f, 15.0f);
 	m_projectionMatrix = glm::perspective(45.0f, 16.0f / 9.0f, 1.0f, 1000.0f);
 }
 

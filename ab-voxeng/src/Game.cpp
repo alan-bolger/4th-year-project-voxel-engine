@@ -66,9 +66,8 @@ void Game::initialise()
 	glewExperimental = GL_TRUE;
 	auto init_res = glewInit();
 
-	// Activate super secret top quality extreme supreme ultimate special OpenGL functions
-	// Culling faces will increase performance by around 50000000%
-	// All joking aside though, this should be disabled when drawing models that show front and back faces simultaneously
+	// Activate face culling
+	// TODO: This isn't used because we're raytracing
 	glEnable(GL_CULL_FACE);
 	glCullFace(GL_BACK);
 
@@ -87,6 +86,7 @@ void Game::initialise()
 	}
 
 	// Use v-sync
+	// TODO: Still not sure about v-sync
 	if (SDL_GL_SetSwapInterval(1) < 0)
 	{
 		std::cout << "Warning: Unable to set VSync! Error: %s\n", SDL_GetError();
@@ -124,6 +124,10 @@ void Game::initialise()
 	m_mainShader = new ab::Shader("shaders/passthrough.vert", "shaders/passthrough.frag");
 	m_renderQuadShader = new ab::Shader("shaders/renderquad.vert", "shaders/renderquad.frag");
 	m_computeShader = new ab::Shader("shaders/raytracer.comp");
+
+	// Terrain
+	// m_terrain = new ab::Terrain();
+	// m_terrain->generate(4, 4);
 
 	// Test model
 	ab::OpenGL::import("models/generic-block.obj", m_cube, "models/grass-block.png");
@@ -228,17 +232,17 @@ void Game::raytrace()
 	// Set viewing frustum corner rays in shader
 	ab::OpenGL::uniform3f(*m_computeShader, "eye", m_camera->getEye().x, m_camera->getEye().y, m_camera->getEye().z);	
 
-	m_camera->getEyeRay(-1, -1, eyeRay);
-	ab::OpenGL::uniform3f(*m_computeShader, "ray00", eyeRay.x, eyeRay.y, eyeRay.z);
+	m_camera->getEyeRay(-1, -1, m_eyeRay);
+	ab::OpenGL::uniform3f(*m_computeShader, "ray00", m_eyeRay.x, m_eyeRay.y, m_eyeRay.z);
 
-	m_camera->getEyeRay(-1, 1, eyeRay);
-	ab::OpenGL::uniform3f(*m_computeShader, "ray01", eyeRay.x, eyeRay.y, eyeRay.z);
+	m_camera->getEyeRay(-1, 1, m_eyeRay);
+	ab::OpenGL::uniform3f(*m_computeShader, "ray01", m_eyeRay.x, m_eyeRay.y, m_eyeRay.z);
 
-	m_camera->getEyeRay(1, -1, eyeRay);
-	ab::OpenGL::uniform3f(*m_computeShader, "ray10", eyeRay.x, eyeRay.y, eyeRay.z);
+	m_camera->getEyeRay(1, -1, m_eyeRay);
+	ab::OpenGL::uniform3f(*m_computeShader, "ray10", m_eyeRay.x, m_eyeRay.y, m_eyeRay.z);
 
-	m_camera->getEyeRay(1, 1, eyeRay);
-	ab::OpenGL::uniform3f(*m_computeShader, "ray11", eyeRay.x, eyeRay.y, eyeRay.z);
+	m_camera->getEyeRay(1, 1, m_eyeRay);
+	ab::OpenGL::uniform3f(*m_computeShader, "ray11", m_eyeRay.x, m_eyeRay.y, m_eyeRay.z);
 
 	// Bind level 0 of framebuffer texture as writable image in the shader
 	glBindImageTexture(0, m_FBOtextureID, 0, false, 0, GL_WRITE_ONLY, GL_RGBA32F);

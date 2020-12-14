@@ -17,6 +17,7 @@
 #include "OpenGL.h"
 #include "Camera.h"
 #include "XboxOneController.h"
+#include "Terrain.h"
 
 #include "Debug.h"
 
@@ -38,6 +39,7 @@ private:
 	ab::Shader *m_mainShader;
 	ab::Shader *m_renderQuadShader;
 	ab::Shader *m_computeShader;
+	// ab::Terrain *m_terrain;
 	ab::Model m_cube;
 
 	// Quad for render to texture
@@ -61,7 +63,7 @@ private:
 	GLint m_workGroupSizeY;
 	GLuint m_frameBufferID;
 	GLuint m_FBOtextureID;
-	glm::vec3 eyeRay;
+	glm::vec3 m_eyeRay;
 
 	void initialise();
 	void processEvents();
