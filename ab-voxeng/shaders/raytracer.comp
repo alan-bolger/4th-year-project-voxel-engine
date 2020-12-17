@@ -8,44 +8,42 @@ uniform vec3 ray01;
 uniform vec3 ray10;
 uniform vec3 ray11;
 
+vec3 boundingBoxSize = vec3(0.5, 0.5, 0.5);
+
 struct box 
 {
     vec3 min;
     vec3 max;
+    vec3 center;
+    vec3 surfaceColour;
+    vec3 emissionColour;
+    float transparency;
+    float reflection;
 };
 
 #define MAX_SCENE_BOUNDS 100.0
-#define NUM_BOXES 19
-
-vec3 boundingBoxSize = vec3(0.5, 0.5, 0.5);
+#define MAX_RAY_DEPTH 5
+#define NUM_BOXES 3
+#define INFINITY 1e8
 
 const box boxes[] = 
 {
-    {vec3(-10, 0, -10), vec3(10, 1, 10)},  
-    {vec3(-6, 2, -6) - boundingBoxSize, vec3(-6, 2, -6) + boundingBoxSize},
-    {vec3(-3, 2, -6) - boundingBoxSize, vec3(-3, 2, -6) + boundingBoxSize},  
-    {vec3(0, 2, -6) - boundingBoxSize, vec3(0, 2, -6) + boundingBoxSize},
-    {vec3(3, 2, -6) - boundingBoxSize, vec3(3, 2, -6) + boundingBoxSize},  
-    {vec3(6, 2, -6) - boundingBoxSize, vec3(6, 2, -6) + boundingBoxSize},
-    {vec3(-4.5, 4, -6) - boundingBoxSize, vec3(-4.5, 4, -6) + boundingBoxSize},
-    {vec3(-1.5, 4, -6) - boundingBoxSize, vec3(-1.5, 4, -6) + boundingBoxSize},
-    {vec3(1.5, 4, -6) - boundingBoxSize, vec3(1.5, 4, -6) + boundingBoxSize},
-    {vec3(4.5, 4, -6) - boundingBoxSize, vec3(4.5, 4, -6) + boundingBoxSize},
-    {vec3(-3.0, 6, -6) - boundingBoxSize, vec3(-3.0, 6, -6) + boundingBoxSize},
-    {vec3(0.0, 6, -6) - boundingBoxSize, vec3(0.0, 6, -6) + boundingBoxSize},
-    {vec3(3.0, 6, -6) - boundingBoxSize, vec3(3.0, 6, -6) + boundingBoxSize},
-    {vec3(-1.5, 8, -6) - boundingBoxSize, vec3(-1.5, 8, -6) + boundingBoxSize},
-    {vec3(1.5, 8, -6) - boundingBoxSize, vec3(1.5, 8, -6) + boundingBoxSize},
-    {vec3(0.0, 10.0, -6) - boundingBoxSize, vec3(0.0, 10.0, -6) + boundingBoxSize},
-    {vec3(-6, 2, 4) - boundingBoxSize, vec3(-6, 2, 4) + boundingBoxSize},
-    {vec3(6, 2, 4) - boundingBoxSize, vec3(6, 2, 4) + boundingBoxSize},  
-    {vec3(0.0, 2, 6) - boundingBoxSize, vec3(0.0, 2, 6) + boundingBoxSize},  
+    //                                  position,          radius, surface color, reflectivity, transparency, emission color
+    // spheres.push_back(Sphere(Vec3f( 0.0,     20, -30),     3, Vec3f(0.00, 0.00, 0.00), 0, 0.0, Vec3f(3)));
+    { vec3(0, 0, 0) - boundingBoxSize, vec3(0, 0, 0) + boundingBoxSize, vec3(0.0, 0.0, 0.0), vec3(1.0, 1.0, 0.20), vec3(0.5, 0.5, 0.5), 0.0, 1.0 }, 
+    { vec3(-6, 2, -6) - boundingBoxSize, vec3(-6, 2, -6) + boundingBoxSize, vec3(-6, 2, -6), vec3(0.0, 1.0, 0.0), vec3(0.0, 0.0, 0.0), 0.0, 1.0 },
+    { vec3(6, 2, 6) - boundingBoxSize, vec3(6, 2, 6) + boundingBoxSize, vec3(6, 2, 6), vec3(0.0, 1.0, 0.0), vec3(3.0, 3.0, 3.0), 0.0, 0.0 }
 };
 
 struct hitinfo 
 {
-    vec2 lambda;
-    int bi;
+    vec2 nearFar;
+    float bi;
+    vec3 center;
+    vec3 surfaceColour;
+    vec3 emissionColour;
+    float transparency;
+    float reflection;
 };
 
 vec2 intersectBox(vec3 origin, vec3 dir, const box b) 
@@ -66,13 +64,18 @@ bool intersectBoxes(vec3 origin, vec3 dir, out hitinfo info)
     
     for (int i = 0; i < NUM_BOXES; i++)
     {
-        vec2 lambda = intersectBox(origin, dir, boxes[i]);
+        vec2 nearFar = intersectBox(origin, dir, boxes[i]);
 
-        if (lambda.x > 0.0 && lambda.x < lambda.y && lambda.x < smallest)
+        if (nearFar.x > 0.0 && nearFar.x < nearFar.y && nearFar.x < smallest)
         {
-            info.lambda = lambda;
+            info.nearFar = nearFar;
             info.bi = i;
-            smallest = lambda.x;
+            smallest = nearFar.x;
+            info.center = boxes[i].center;
+            info.surfaceColour = boxes[i].surfaceColour;
+            info.emissionColour = boxes[i].emissionColour;
+            info.transparency = boxes[i].transparency;
+            info.reflection = boxes[i].reflection;
             found = true;
         }
     }
@@ -80,17 +83,90 @@ bool intersectBoxes(vec3 origin, vec3 dir, out hitinfo info)
     return found;
 }
 
-vec4 trace(vec3 origin, vec3 dir) 
+// Trace
+vec3 trace(vec3 origin, vec3 raydir, int depth) 
 {
     hitinfo i;
+    box b;
 
-    if (intersectBoxes(origin, dir, i))
+    if (intersectBoxes(origin, raydir, i))
     {
-        vec4 gray = vec4(0.5, i.bi / 10.0 + 0.8, 0.5, 1.0);
-        return vec4(gray.rgb, 1.0);
-    }
+        vec3 surfaceColour = vec3(0.0, 0.0, 0.0); // Colour of the ray/surface of the object intersected by the ray 
+        vec3 phit = origin + raydir * i.nearFar.x; // Point of intersection 
+        vec3 nhit = phit - i.center; // Normal at the intersection point 
+        nhit = normalize(nhit); // Normalize normal direction 
 
-    return vec4(0.0, 0.3, 0.0, 1.0);
+        // If the normal and the view direction are not opposite to each other then
+        // reverse the normal direction. That also means we are inside the box so set
+        // the inside bool to true. Finally, reverse the sign of IdotN which we want
+        // positive.
+        float bias = 1e-4; // Add some bias to the point from which we will be tracing 
+        bool inside = false; 
+
+        if (dot(raydir, nhit) > 0) 
+        {
+            nhit = -nhit;
+            inside = true; 
+        }
+
+        if ((i.transparency > 0 || i.reflection > 0) && depth < MAX_RAY_DEPTH) 
+        { 
+            float facingratio = -dot(raydir, nhit); 
+
+            // Change the mix value to tweak the effect
+            float fresneleffect = mix(pow(1.0 - facingratio, 3.0), 1.0, 0.1); 
+
+            // Compute reflection direction (no need to normalize because all vectors are already normalized)
+            vec3 refldir = raydir - nhit * 2 * dot(raydir, nhit); 
+            refldir = normalize(refldir); 
+            vec3 reflection = trace(phit + nhit * bias, refldir, depth + 1); 
+            vec3 refraction = vec3(0.0, 0.0, 0.0); 
+
+            // If the box is also transparent compute refraction ray (transmission)
+            if (i.transparency > 0) 
+            { 
+                float ior = 1.1, eta = (inside) ? ior : 1 / ior; // are we inside or outside the surface? 
+                float cosi = dot(-nhit, raydir); 
+                float k = 1 - eta * eta * (1 - cosi * cosi); 
+                vec3 refrdir = raydir * eta + nhit * (eta *  cosi - sqrt(k)); 
+                refrdir = normalize(refrdir); 
+                refraction = trace(phit - nhit * bias, refrdir, depth + 1); 
+            } 
+            
+            // The result is a mix of reflection and refraction (if the box is transparent)
+            surfaceColour = (reflection * fresneleffect + refraction * (1 - fresneleffect) * i.transparency) * i.surfaceColour;
+        } 
+        else 
+        { 
+            // it's a diffuse object, no need to raytrace any further
+            for (unsigned int i = 0; i < NUM_BOXES; ++i) 
+            { 
+                if (boxes[i].emissionColour.x > 0) 
+                { 
+                    // This is a light
+                    vec3 transmission = vec3(1.0, 1.0, 1.0); 
+                    vec3 lightDirection = boxes[i].center - phit; 
+                    lightDirection = normalize(lightDirection); 
+
+                    for (unsigned int j = 0; j < NUM_BOXES; ++j)
+                    { 
+                        if (i != j)
+                        { 
+                            hitinfo intersect;
+
+                            if (intersectBoxes(phit + nhit * bias, lightDirection, intersect))                       
+                            { 
+                                transmission = vec3(0.0, 0.0, 0.0); 
+                                break; 
+                            } 
+                        } 
+                    } 
+
+                    return surfaceColour += surfaceColour * transmission * max(float(0), dot(nhit, lightDirection)) * boxes[i].emissionColour; 
+                } 
+            } 
+        } 
+    }    
 }
 
 layout (local_size_x = 16, local_size_y = 8) in;
@@ -107,6 +183,6 @@ void main(void)
     
     vec2 pos = vec2(pix) / vec2(size.x - 1, size.y - 1);
     vec3 dir = mix(mix(ray00, ray01, pos.y), mix(ray10, ray11, pos.y), pos.x);
-    vec4 color = trace(eye, dir);
-    imageStore(framebuffer, pix, color);
+    vec4 colour = vec4(trace(eye, dir, 0), 1.0);
+    imageStore(framebuffer, pix, colour);
 }

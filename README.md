@@ -10,6 +10,8 @@ Included libraries:
 
 Project made with Visual Studio 2019.
 
+[Current State](capture.png)
+
 ## Author
 
 * **Alan Bolger**

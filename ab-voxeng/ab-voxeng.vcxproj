@@ -50,6 +50,7 @@
     <None Include="shaders\passthrough.frag" />
     <None Include="shaders\passthrough.vert" />
     <None Include="shaders\raytracer.comp" />
+    <None Include="shaders\raytracerOLD.comp" />
     <None Include="shaders\renderquad.frag" />
     <None Include="shaders\renderquad.vert" />
   </ItemGroup>
