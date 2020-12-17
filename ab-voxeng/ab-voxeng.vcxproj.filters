@@ -100,13 +100,16 @@
     <None Include="shaders\passthrough.frag">
       <Filter>Shaders</Filter>
     </None>
-    <None Include="shaders\raytracer.comp">
-      <Filter>Shaders</Filter>
-    </None>
     <None Include="shaders\renderquad.frag">
       <Filter>Shaders</Filter>
     </None>
     <None Include="shaders\renderquad.vert">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="shaders\raytracerOLD.comp">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="shaders\raytracer.comp">
       <Filter>Shaders</Filter>
     </None>
   </ItemGroup>

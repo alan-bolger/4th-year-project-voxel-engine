@@ -123,7 +123,7 @@ void Game::initialise()
 	// Shaders
 	m_mainShader = new ab::Shader("shaders/passthrough.vert", "shaders/passthrough.frag");
 	m_renderQuadShader = new ab::Shader("shaders/renderquad.vert", "shaders/renderquad.frag");
-	m_computeShader = new ab::Shader("shaders/raytracer.comp");
+	m_computeShader = new ab::Shader("shaders/raytracerOLD.comp");
 
 	// Terrain
 	// m_terrain = new ab::Terrain();
@@ -248,11 +248,11 @@ void Game::raytrace()
 	glBindImageTexture(0, m_FBOtextureID, 0, false, 0, GL_WRITE_ONLY, GL_RGBA32F);
 
 	// Compute appropriate invocation dimension
-	int worksizeX = ab::OpenGL::nextPowerOfTwo(1280);
-	int worksizeY = ab::OpenGL::nextPowerOfTwo(720);
+	int f_worksizeX = ab::OpenGL::nextPowerOfTwo(1280);
+	int f_worksizeY = ab::OpenGL::nextPowerOfTwo(720);
 
 	// Invoke the compute shader
-	glDispatchCompute(worksizeX / m_workGroupSizeX, worksizeY / m_workGroupSizeY, 1);
+	glDispatchCompute(f_worksizeX / m_workGroupSizeX, f_worksizeY / m_workGroupSizeY, 1);
 
 	// Reset image binding
 	glBindImageTexture(0, 0, 0, false, 0, GL_READ_WRITE, GL_RGBA32F);
