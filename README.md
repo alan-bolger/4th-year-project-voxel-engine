@@ -2,11 +2,11 @@
 
 Included libraries:
 
-> SDL2
+> SDL2 - <https://www.libsdl.org/>
 
-> GLM
+> GLM - <https://github.com/g-truc/glm>
 
-> GLEW
+> GLEW - <http://glew.sourceforge.net/>
 
 Project made with Visual Studio 2019.
 
