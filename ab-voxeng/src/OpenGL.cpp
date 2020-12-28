@@ -40,7 +40,7 @@ void ab::OpenGL::import(const char *t_modelFilename, ab::Model &t_model, std::st
 	}
 	else
 	{
-		std::cout << "No texture was provided so no attempt was made to load one" << std::endl;
+		std::cout << "No texture was provided for " << t_modelFilename << std::endl;
 	}
 	
 	// Load OBJ file

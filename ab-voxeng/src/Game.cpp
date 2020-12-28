@@ -11,6 +11,15 @@
 Game::Game(int t_width, int t_height) 
 {
 	m_window = SDL_CreateWindow("Voxel Engine [Alan Bolger]", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, t_width, t_height, SDL_WINDOW_OPENGL);
+
+	// Put test stuff here so I can find it easily
+	m_spheres.push_back(Sphere(glm::vec3(0.0, -10004, -20), 10000, glm::vec3(0.20, 0.20, 1.0), 0, 0.0));
+	m_spheres.push_back(Sphere(glm::vec3(0.0, 0, -20), 4, glm::vec3(1.00, 0.32, 0.36), 1, 0.5));
+	m_spheres.push_back(Sphere(glm::vec3(5.0, -1, -15), 2, glm::vec3(0.90, 0.76, 0.46), 1, 0.0));
+	m_spheres.push_back(Sphere(glm::vec3(5.0, 0, -25), 3, glm::vec3(0.65, 0.77, 0.97), 1, 0.0));
+	m_spheres.push_back(Sphere(glm::vec3(-5.5, 0, -15), 3, glm::vec3(0.90, 0.90, 0.90), 1, 0.0));
+	m_spheres.push_back(Sphere(glm::vec3(0.0, 20, -30), 3, glm::vec3(0.00, 0.00, 0.00), 0, 0.0, glm::vec3(3))); // Light
+
 	initialise();
 }
 
@@ -110,7 +119,7 @@ void Game::initialise()
 	}
 
 	// Frame rate / Game loop
-	m_frameRate = 60.0;
+	m_frameRate = 30.0;
 	m_frameMs = 1000.0f / m_frameRate;
 	m_looping = true;
 
@@ -123,14 +132,17 @@ void Game::initialise()
 	// Shaders
 	m_mainShader = new ab::Shader("shaders/passthrough.vert", "shaders/passthrough.frag");
 	m_renderQuadShader = new ab::Shader("shaders/renderquad.vert", "shaders/renderquad.frag");
-	m_computeShader = new ab::Shader("shaders/raytracerOLD.comp");
+	m_computeShader = new ab::Shader("shaders/raytracer.comp");
 
 	// Terrain
 	// m_terrain = new ab::Terrain();
 	// m_terrain->generate(4, 4);
 
+	// Ray tracer
+	m_rayTracer = new ab::RayTracer();
+
 	// Test model
-	ab::OpenGL::import("models/generic-block.obj", m_cube, "models/grass-block.png");
+	ab::OpenGL::import("models/generic-block.obj", m_cube);
 	m_cube.matrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
 
 	// Raytracing stuff
@@ -144,6 +156,8 @@ void Game::initialise()
 	glGenBuffers(1, &m_quadVertexBufferObjectID);
 	glBindBuffer(GL_ARRAY_BUFFER, m_quadVertexBufferObjectID);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(m_quadVertices), m_quadVertices, GL_STATIC_DRAW);
+
+	m_cpuRayTracedTextureID = m_rayTracer->draw(m_spheres, *m_camera);
 }
 
 /// <summary>
@@ -201,7 +215,9 @@ void Game::draw()
 	// ab::OpenGL::uniformMatrix4fv(*m_mainShader, "model", &m_cube.matrix[0][0]);
 	// ab::OpenGL::draw(m_cube, m_mainShader, "diffuseTexture");
 
-	raytrace();
+	// raytrace();	
+
+	renderTextureToQuad(m_cpuRayTracedTextureID);
 	
 	// Display everything
 	SDL_GL_SwapWindow(m_window);
@@ -260,19 +276,19 @@ void Game::raytrace()
 	glUseProgram(0);
 
 	// Render image on a quad
-	renderTextureToQuad();
+	renderTextureToQuad(m_FBOtextureID);
 }
 
 /// <summary>
 /// Draw a quad and render a texture to it.
 /// </summary>
-void Game::renderTextureToQuad()
+void Game::renderTextureToQuad(GLuint &t_textureID)
 {
 	glUseProgram(m_renderQuadShader->m_programID);
 
 	// Bind our texture in texture unit 1 and set shader to use texture unit 1
 	glActiveTexture(GL_TEXTURE1);
-	glBindTexture(GL_TEXTURE_2D, m_FBOtextureID);
+	glBindTexture(GL_TEXTURE_2D, t_textureID);
 	ab::OpenGL::uniform1i(*m_renderQuadShader, "uniformTexture", 1);
 
 	// Vertex buffer object

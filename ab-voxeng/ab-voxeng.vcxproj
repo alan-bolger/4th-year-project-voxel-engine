@@ -27,7 +27,9 @@
     <ClCompile Include="src\Noise.cpp" />
     <ClCompile Include="src\Octree.cpp" />
     <ClCompile Include="src\OpenGL.cpp" />
+    <ClCompile Include="src\RayTracer.cpp" />
     <ClCompile Include="src\Shader.cpp" />
+    <ClCompile Include="src\Sphere.cpp" />
     <ClCompile Include="src\Terrain.cpp" />
     <ClCompile Include="src\XboxOneController.cpp" />
   </ItemGroup>
@@ -41,7 +43,9 @@
     <ClInclude Include="h\Noise.h" />
     <ClInclude Include="h\Octree.h" />
     <ClInclude Include="h\OpenGL.h" />
+    <ClInclude Include="h\RayTracer.h" />
     <ClInclude Include="h\Shader.h" />
+    <ClInclude Include="h\Sphere.h" />
     <ClInclude Include="h\stb_image.h" />
     <ClInclude Include="h\Terrain.h" />
     <ClInclude Include="h\XboxOneController.h" />
@@ -53,6 +57,7 @@
     <None Include="shaders\raytracerOLD.comp" />
     <None Include="shaders\renderquad.frag" />
     <None Include="shaders\renderquad.vert" />
+    <None Include="shaders\raytracerWithLighting.comp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
