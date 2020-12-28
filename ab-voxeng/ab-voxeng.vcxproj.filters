@@ -51,6 +51,12 @@
     <ClCompile Include="src\Terrain.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\RayTracer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Sphere.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="h\Debug.h">
@@ -92,6 +98,12 @@
     <ClInclude Include="h\Terrain.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="h\RayTracer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="h\Sphere.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="shaders\passthrough.vert">
@@ -110,6 +122,9 @@
       <Filter>Shaders</Filter>
     </None>
     <None Include="shaders\raytracer.comp">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="shaders\raytracerWithLighting.comp">
       <Filter>Shaders</Filter>
     </None>
   </ItemGroup>

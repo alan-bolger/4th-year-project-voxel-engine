@@ -9,6 +9,7 @@ uniform vec3 ray10;
 uniform vec3 ray11;
 
 vec3 boundingBoxSize = vec3(0.5, 0.5, 0.5);
+int depth;
 
 struct box 
 {
@@ -25,6 +26,7 @@ struct box
 #define MAX_RAY_DEPTH 5
 #define NUM_BOXES 3
 #define INFINITY 1e8
+#define PI 3.141592653589793
 
 const box boxes[] = 
 {
@@ -130,7 +132,7 @@ vec3 trace(vec3 origin, vec3 raydir, int depth)
                 float k = 1 - eta * eta * (1 - cosi * cosi); 
                 vec3 refrdir = raydir * eta + nhit * (eta *  cosi - sqrt(k)); 
                 refrdir = normalize(refrdir); 
-                refraction = trace(phit - nhit * bias, refrdir, depth + 1); 
+                //refraction = trace(phit - nhit * bias, refrdir, depth + 1); 
             } 
             
             // The result is a mix of reflection and refraction (if the box is transparent)
@@ -181,8 +183,24 @@ void main(void)
         return;
     }
     
-    vec2 pos = vec2(pix) / vec2(size.x - 1, size.y - 1);
-    vec3 dir = mix(mix(ray00, ray01, pos.y), mix(ray10, ray11, pos.y), pos.x);
-    vec4 colour = vec4(trace(eye, dir, 0), 1.0);
-    imageStore(framebuffer, pix, colour);
+//    vec2 pos = vec2(pix) / vec2(size.x - 1, size.y - 1);
+//    vec3 dir = mix(mix(ray00, ray01, pos.y), mix(ray10, ray11, pos.y), pos.x);
+//    vec4 colour = vec4(trace(eye, dir, 0), 1.0);
+//    imageStore(framebuffer, pix, colour);
+
+    depth = 0;
+    int width = 640;
+    int height = 480;
+    float invWidth = 1 / float(width), invHeight = 1 / float(height); 
+    float fov = 30;
+    float aspectratio = width / float(height); 
+    float angle = tan(PI * 0.5 * fov / 180.0); 
+
+    // Trace rays
+    float xx = (2 * ((pix.x + 0.5) * invWidth) - 1) * angle * aspectratio; 
+    float yy = (1 - 2 * ((pix.y + 0.5) * invHeight)) * angle; 
+    vec3 raydir = vec3(xx, yy, -1); 
+    raydir = normalize(raydir);
+    vec4 pixel = vec4(trace(eye, raydir, depth), 1.0);
+    imageStore(framebuffer, pix, pixel);
 }

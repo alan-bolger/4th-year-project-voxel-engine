@@ -18,8 +18,9 @@
 #include "Camera.h"
 #include "XboxOneController.h"
 #include "Terrain.h"
-
 #include "Debug.h"
+#include "Sphere.h"
+#include "RayTracer.h"
 
 class Game
 {
@@ -40,6 +41,8 @@ private:
 	ab::Shader *m_renderQuadShader;
 	ab::Shader *m_computeShader;
 	// ab::Terrain *m_terrain;
+	ab::RayTracer *m_rayTracer;
+	std::vector<Sphere> m_spheres;
 	ab::Model m_cube;
 
 	// Quad for render to texture
@@ -58,6 +61,9 @@ private:
 		 1.0f,  1.0f, 0.0f,
 	};
 
+	// CPU raytracing stuff
+	GLuint m_cpuRayTracedTextureID;
+
 	// Compute shader stuff
 	GLint m_workGroupSizeX;
 	GLint m_workGroupSizeY;
@@ -71,7 +77,7 @@ private:
 	void draw();
 	void initialiseRaytracing();
 	void raytrace();
-	void renderTextureToQuad();
+	void renderTextureToQuad(GLuint &t_textureID);
 };
 
 #endif // !GAME_H
