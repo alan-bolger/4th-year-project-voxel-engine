@@ -12,13 +12,22 @@ Game::Game(int t_width, int t_height)
 {
 	m_window = SDL_CreateWindow("Voxel Engine [Alan Bolger]", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, t_width, t_height, SDL_WINDOW_OPENGL);
 
-	// Put test stuff here so I can find it easily
-	m_spheres.push_back(Sphere(glm::vec3(0.0, -10004, -20), 10000, glm::vec3(0.20, 0.20, 1.0), 0, 0.0));
-	m_spheres.push_back(Sphere(glm::vec3(0.0, 0, -20), 4, glm::vec3(1.00, 0.32, 0.36), 1, 0.5));
-	m_spheres.push_back(Sphere(glm::vec3(5.0, -1, -15), 2, glm::vec3(0.90, 0.76, 0.46), 1, 0.0));
-	m_spheres.push_back(Sphere(glm::vec3(5.0, 0, -25), 3, glm::vec3(0.65, 0.77, 0.97), 1, 0.0));
-	m_spheres.push_back(Sphere(glm::vec3(-5.5, 0, -15), 3, glm::vec3(0.90, 0.90, 0.90), 1, 0.0));
-	m_spheres.push_back(Sphere(glm::vec3(0.0, 20, -30), 3, glm::vec3(0.00, 0.00, 0.00), 0, 0.0, glm::vec3(3))); // Light
+	//// Put test stuff here so I can find it easily
+	//m_spheres.push_back(Sphere(glm::vec3(0.0, -10004, -20), 10000, glm::vec3(0.20, 0.20, 1.0), 0, 0.0));
+	//m_spheres.push_back(Sphere(glm::vec3(0.0, 0, -20), 4, glm::vec3(1.00, 0.32, 0.36), 1, 0.5));
+	//m_spheres.push_back(Sphere(glm::vec3(5.0, -1, -15), 2, glm::vec3(0.90, 0.76, 0.46), 1, 0.0));
+	//m_spheres.push_back(Sphere(glm::vec3(5.0, 0, -25), 3, glm::vec3(0.65, 0.77, 0.97), 1, 0.0));
+	//m_spheres.push_back(Sphere(glm::vec3(-5.5, 0, -15), 3, glm::vec3(0.90, 0.90, 0.90), 1, 0.0));
+	//m_spheres.push_back(Sphere(glm::vec3(0.0, 20, -30), 3, glm::vec3(0.00, 0.00, 0.00), 0, 0.0, glm::vec3(3))); // Light
+
+	//glm::vec3 boundingBoxSize = glm::vec3(8, 8, 8);
+
+	//m_cubes.push_back(Cube(glm::vec3(10.0, -10004, -20), glm::vec3(10000, 10000, 10000), glm::vec3(1, 1, 1), 0.0f, 0.f));
+	//m_cubes.push_back(Cube(glm::vec3(-10, 2, 0), boundingBoxSize, glm::vec3(1.00, 0.32, 0.36), 0.0, 0.0));
+	//m_cubes.push_back(Cube(glm::vec3(0, 4, 0), boundingBoxSize, glm::vec3(0.90, 0.76, 0.46), 0.5, 0.0));
+	//m_cubes.push_back(Cube(glm::vec3(10, 6, 0), boundingBoxSize, glm::vec3(0.65, 0.77, 0.97), 0.5, 0.0));
+	//m_cubes.push_back(Cube(glm::vec3(20, 8, 0), boundingBoxSize, glm::vec3(0.90, 0.90, 0.90), 0.5, 0.0));
+	//m_cubes.push_back(Cube(glm::vec3(0.0, -10, 0), boundingBoxSize, glm::vec3(0.00, 0.00, 0.00), 0.0, 0.0, glm::vec3(3))); // Light
 
 	initialise();
 }
@@ -34,7 +43,13 @@ Game::~Game()
 	delete m_controller;
 	delete m_camera;
 	delete m_mainShader;
+	delete m_renderQuadShader;
 	delete m_computeShader;
+	delete m_terrain;
+
+	ImGui_ImplOpenGL3_Shutdown();
+	ImGui_ImplSDL2_Shutdown();
+	ImGui::DestroyContext();
 	
 	IMG_Quit();
 	SDL_Quit();
@@ -75,8 +90,26 @@ void Game::initialise()
 	glewExperimental = GL_TRUE;
 	auto init_res = glewInit();
 
+	// Setup Dear ImGui context
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+	ImGuiIO &io = ImGui::GetIO(); (void)io;
+
+	// Setup Dear ImGui style
+	ImGui::StyleColorsDark();
+
+	// Setup Platform/Renderer bindings
+	// window is the SDL_Window*
+	// context is the SDL_GLContext
+	ImGui_ImplSDL2_InitForOpenGL(m_window, m_glContext);
+	ImGui_ImplOpenGL3_Init();
+
 	// Activate face culling
 	// TODO: This isn't used because we're raytracing
+	// TODO: But now we're using it again because we're raytracing AND rasterizing
+	// TODO: Delete unnecessary TODO entries regarding raytracing and rasterizing
+	glEnable(GL_DEPTH_TEST);
+	glDepthFunc(GL_LESS);
 	glEnable(GL_CULL_FACE);
 	glCullFace(GL_BACK);
 
@@ -119,7 +152,7 @@ void Game::initialise()
 	}
 
 	// Frame rate / Game loop
-	m_frameRate = 30.0;
+	m_frameRate = 60.0;
 	m_frameMs = 1000.0f / m_frameRate;
 	m_looping = true;
 
@@ -135,14 +168,26 @@ void Game::initialise()
 	m_computeShader = new ab::Shader("shaders/raytracer.comp");
 
 	// Terrain
-	// m_terrain = new ab::Terrain();
-	// m_terrain->generate(4, 4);
+	m_terrain = new ab::Terrain();
+	m_terrain->generate(1024, 1024);
+
+	// This is temp stuff for testing
+	glm::mat4 f_translationMatrix;
+
+	for (int y = 0; y < 1024; ++y)
+	{
+		for (int x = 0; x < 1024; ++x)
+		{
+			f_translationMatrix = glm::translate(glm::mat4(1.0f), m_terrain->m_boxes[y][x].center);
+			m_cube.instancingPositions.push_back(f_translationMatrix);
+		}
+	}
 
 	// Ray tracer
-	m_rayTracer = new ab::RayTracer();
+	// m_rayTracer = new ab::RayTracer();
 
 	// Test model
-	ab::OpenGL::import("models/generic-block.obj", m_cube);
+	ab::OpenGL::import("models/generic-block.obj", m_cube, "models/grass-block.png");
 	m_cube.matrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
 
 	// Raytracing stuff
@@ -157,7 +202,7 @@ void Game::initialise()
 	glBindBuffer(GL_ARRAY_BUFFER, m_quadVertexBufferObjectID);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(m_quadVertices), m_quadVertices, GL_STATIC_DRAW);
 
-	m_cpuRayTracedTextureID = m_rayTracer->draw(m_spheres, *m_camera);
+	// m_cpuRayTracedTextureID = m_rayTracer->drawCubes(m_cubes, *m_camera);
 }
 
 /// <summary>
@@ -170,16 +215,13 @@ void Game::processEvents()
 
 	while (SDL_PollEvent(&f_event))
 	{
-		switch (f_event.type)
+		// Forward to ImGUI
+		ImGui_ImplSDL2_ProcessEvent(&f_event);
+
+		if (f_event.type == SDL_QUIT || (f_event.type == SDL_WINDOWEVENT && f_event.window.event == SDL_WINDOWEVENT_CLOSE
+				&& f_event.window.windowID == SDL_GetWindowID(m_window)))
 		{
-		case SDL_KEYDOWN:
-			switch (f_event.key.keysym.sym)
-			{
-			case SDLK_ESCAPE:
-				m_looping = false;
-				break;
-			}
-			break;
+			m_looping = false;
 		}
 
 		m_controller->processEvents(f_event);
@@ -192,6 +234,19 @@ void Game::processEvents()
 /// <param name="t_deltaTime">The current delta time.</param>
 void Game::update(double t_deltaTime)
 {
+	// Start the Dear ImGui frame
+	ImGui_ImplOpenGL3_NewFrame();
+	ImGui_ImplSDL2_NewFrame(m_window);
+	ImGui::NewFrame();
+
+	// ImGUI test
+	ImGui::Begin("Camera");
+	ImGui::Text("Position:");
+	ImGui::Text("X: %f", m_camera->getEye().x);
+	ImGui::Text("Y: %f", m_camera->getEye().y);
+	ImGui::Text("Z: %f", m_camera->getEye().z);
+	ImGui::End();
+
 	// Update camera and controls
 	m_camera->update(t_deltaTime);
 
@@ -209,15 +264,17 @@ void Game::draw()
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	// Activate shader
-	// glUseProgram(m_mainShader->m_programID);
+	glUseProgram(m_mainShader->m_programID);
 
 	// Draw test cube
-	// ab::OpenGL::uniformMatrix4fv(*m_mainShader, "model", &m_cube.matrix[0][0]);
-	// ab::OpenGL::draw(m_cube, m_mainShader, "diffuseTexture");
+	ab::OpenGL::uniformMatrix4fv(*m_mainShader, "model", &m_cube.matrix[0][0]);
+	ab::OpenGL::draw(m_cube, m_mainShader, "diffuseTexture");
 
-	// raytrace();	
+	// Render ImGUI stuff
+	ImGui::Render();
+	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
-	renderTextureToQuad(m_cpuRayTracedTextureID);
+	// raytrace();
 	
 	// Display everything
 	SDL_GL_SwapWindow(m_window);

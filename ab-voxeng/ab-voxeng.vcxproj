@@ -19,8 +19,16 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="libs\imgui\backends\imgui_impl_opengl3.cpp" />
+    <ClCompile Include="libs\imgui\backends\imgui_impl_sdl.cpp" />
+    <ClCompile Include="libs\imgui\imgui.cpp" />
+    <ClCompile Include="libs\imgui\imgui_demo.cpp" />
+    <ClCompile Include="libs\imgui\imgui_draw.cpp" />
+    <ClCompile Include="libs\imgui\imgui_tables.cpp" />
+    <ClCompile Include="libs\imgui\imgui_widgets.cpp" />
     <ClCompile Include="src\Camera.cpp" />
     <ClCompile Include="src\Clock.cpp" />
+    <ClCompile Include="src\Cube.cpp" />
     <ClCompile Include="src\Game.cpp" />
     <ClCompile Include="src\Main.cpp" />
     <ClCompile Include="src\ModelLoader.cpp" />
@@ -36,8 +44,10 @@
   <ItemGroup>
     <ClInclude Include="h\Camera.h" />
     <ClInclude Include="h\Clock.h" />
+    <ClInclude Include="h\Cube.h" />
     <ClInclude Include="h\Debug.h" />
     <ClInclude Include="h\Game.h" />
+    <ClInclude Include="h\Geometry.h" />
     <ClInclude Include="h\Model.h" />
     <ClInclude Include="h\ModelLoader.h" />
     <ClInclude Include="h\Noise.h" />
@@ -54,10 +64,8 @@
     <None Include="shaders\passthrough.frag" />
     <None Include="shaders\passthrough.vert" />
     <None Include="shaders\raytracer.comp" />
-    <None Include="shaders\raytracerOLD.comp" />
     <None Include="shaders\renderquad.frag" />
     <None Include="shaders\renderquad.vert" />
-    <None Include="shaders\raytracerWithLighting.comp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
@@ -123,14 +131,14 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <LibraryPath>$(ProjectDir)\libs\glew;$(ProjectDir)\libs\SDL2;$(LibraryPath)</LibraryPath>
-    <IncludePath>$(ProjectDir)\libs;$(ProjectDir)\sdl2_image\include;$(ProjectDir)\sdl2_ttf\include;$(ProjectDir)\sdl2\include;$(ProjectDir)\h;$(IncludePath)</IncludePath>
-    <SourcePath>$(ProjectDir)\src;$(SourcePath)</SourcePath>
+    <LibraryPath>$(LibraryPath);</LibraryPath>
+    <IncludePath>$(ProjectDir)\h;$(IncludePath)</IncludePath>
+    <SourcePath>$(ProjectDir)\src;$(SourcePath);</SourcePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <LibraryPath>$(ProjectDir)\libs;$(LibraryPath)</LibraryPath>
-    <IncludePath>$(ProjectDir)\sdl2\include;$(ProjectDir)\h;$(IncludePath)</IncludePath>
+    <LibraryPath>$(ProjectDir)\libs\glew;$(ProjectDir)\libs\SDL2;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(ProjectDir)\libs;$(ProjectDir)\sdl2_image\include;$(ProjectDir)\sdl2_ttf\include;$(ProjectDir)\imgui\backends;$(ProjectDir)\imgui;$(ProjectDir)\sdl2\include;$(ProjectDir)\h;$(IncludePath)</IncludePath>
     <SourcePath>$(ProjectDir)\src;$(SourcePath)</SourcePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -169,11 +177,13 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>$(ProjectDir)\sdl2\include;$(ProjectDir)\sdl2_image\include;$(ProjectDir)\sdl2_ttf\include;$(ProjectDir)\libs;$(ProjectDir)\libs\imgui\backends;$(ProjectDir)\libs\imgui;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>SDL2.lib;SDL2main.lib;SDL2_ttf.lib;SDL2_image.lib;opengl32.lib;glew32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>SDL2.lib;SDL2main.lib;SDL2_ttf.lib;SDL2_image.lib;opengl32.lib;glew32.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(ProjectDir)\libs\glew;$(ProjectDir)\libs\SDL2;</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -190,7 +200,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>SDL2.lib;SDL2main.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>SDL2.lib;SDL2main.lib;SDL2_ttf.lib;SDL2_image.lib;opengl32.lib;glew32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

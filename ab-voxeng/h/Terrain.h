@@ -11,8 +11,8 @@
 
 struct Box
 {
-	glm::vec3 first;
-	glm::vec3 second;
+	glm::vec3 center;
+	glm::vec3 colour;
 };
 
 namespace ab
@@ -20,15 +20,16 @@ namespace ab
 	class Terrain
 	{
 	public:
+		static const int MAP_WIDTH = 1024;
+		static const int MAP_HEIGHT = 1024;
+		Box m_boxes[MAP_HEIGHT][MAP_WIDTH];
+
 		Terrain();
 		~Terrain();
 		void generate(int t_width, int t_height);
 
 	private:
 		Noise *m_noise;
-		Box m_boxes[4][4];
-		static const int MAP_WIDTH = 16;
-		static const int MAP_HEIGHT = 16;
 
 		void initialise();
 	};

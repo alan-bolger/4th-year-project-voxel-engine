@@ -13,14 +13,15 @@
 #include "SDL_opengl.h"
 #include "SDL_image.h"
 #include "SDL_ttf.h"
+#include "imgui.h"
+#include "imgui_impl_sdl.h"
+#include "imgui_impl_opengl3.h"
 #include "Shader.h"
 #include "OpenGL.h"
 #include "Camera.h"
 #include "XboxOneController.h"
 #include "Terrain.h"
 #include "Debug.h"
-#include "Sphere.h"
-#include "RayTracer.h"
 
 class Game
 {
@@ -40,9 +41,10 @@ private:
 	ab::Shader *m_mainShader;
 	ab::Shader *m_renderQuadShader;
 	ab::Shader *m_computeShader;
-	// ab::Terrain *m_terrain;
-	ab::RayTracer *m_rayTracer;
-	std::vector<Sphere> m_spheres;
+	ab::Terrain *m_terrain;
+	// ab::RayTracer *m_rayTracer;
+	//std::vector<Sphere> m_spheres;
+	//std::vector<Cube> m_cubes;
 	ab::Model m_cube;
 
 	// Quad for render to texture

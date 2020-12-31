@@ -86,9 +86,9 @@ void ab::Terrain::generate(int t_width, int t_height)
 	}
 
 	// First pass of array to find MIN and MAX values
-	for (int z = 0; z < 4; ++z)
+	for (int z = 0; z < t_height; ++z)
 	{
-		for (int x = 0; x < 4; ++x)
+		for (int x = 0; x < t_width; ++x)
 		{
 			float f_yValue = (f_elevationMap[z][x]);
 
@@ -107,18 +107,16 @@ void ab::Terrain::generate(int t_width, int t_height)
 	float f_yValue = 0.0f;
 	float f_waterHeight = 18.0f;
 
-	glm::vec3 f_boundingBoxSize = glm::vec3(1, 1, 1);
-
 	// Second pass of array to normalise values using MIN and MAX
-	for (int z = 0; z < 4; ++z)
+	for (int z = 0; z < t_height; ++z)
 	{
-		for (int x = 0; x < 4; ++x)
+		for (int x = 0; x < t_width; ++x)
 		{
 			float f_arrVal = f_elevationMap[z][x];
 			f_yValue = m_noise->normaliseToRange(f_arrVal, f_min, f_max) * 63.0f;
 
-			m_boxes[z][x].first = glm::vec3(x, f_yValue, z) - f_boundingBoxSize;
-			m_boxes[z][x].second = glm::vec3(x, f_yValue, z) + f_boundingBoxSize;
+			m_boxes[z][x].center = glm::vec3(int(x), int(f_yValue), int(z));
+			m_boxes[z][x].colour = glm::vec3(0.0, 0.0, 1.0);
 		}
 	}
 }
