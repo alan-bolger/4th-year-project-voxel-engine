@@ -20,8 +20,8 @@ namespace ab
 	class Terrain
 	{
 	public:
-		static const int MAP_WIDTH = 1024;
-		static const int MAP_HEIGHT = 1024;
+		static const int MAP_WIDTH = 256;
+		static const int MAP_HEIGHT = 256;
 		Box m_boxes[MAP_HEIGHT][MAP_WIDTH];
 
 		Terrain();

@@ -105,9 +105,6 @@ void Game::initialise()
 	ImGui_ImplOpenGL3_Init();
 
 	// Activate face culling
-	// TODO: This isn't used because we're raytracing
-	// TODO: But now we're using it again because we're raytracing AND rasterizing
-	// TODO: Delete unnecessary TODO entries regarding raytracing and rasterizing
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);
 	glEnable(GL_CULL_FACE);
@@ -161,6 +158,7 @@ void Game::initialise()
 
 	// Camera
 	m_camera = new ab::Camera(*m_controller);
+	m_cameraEye = m_camera->getEye();
 
 	// Shaders
 	m_mainShader = new ab::Shader("shaders/passthrough.vert", "shaders/passthrough.frag");
@@ -169,17 +167,17 @@ void Game::initialise()
 
 	// Terrain
 	m_terrain = new ab::Terrain();
-	m_terrain->generate(1024, 1024);
+	m_terrain->generate(256, 256);
 
 	// This is temp stuff for testing
-	glm::mat4 f_translationMatrix;
+	// glm::mat4 f_translationMatrix;
 
-	for (int y = 0; y < 1024; ++y)
+	for (int y = 0; y < 256; ++y)
 	{
-		for (int x = 0; x < 1024; ++x)
+		for (int x = 0; x < 256; ++x)
 		{
-			f_translationMatrix = glm::translate(glm::mat4(1.0f), m_terrain->m_boxes[y][x].center);
-			m_cube.instancingPositions.push_back(f_translationMatrix);
+			m_cube.instancingPositions.push_back(glm::translate(glm::mat4(1.0f), m_terrain->m_boxes[y][x].center));
+			m_voxelPositions.push_back(glm::vec4(m_terrain->m_boxes[y][x].center, 1.0));
 		}
 	}
 
@@ -202,7 +200,9 @@ void Game::initialise()
 	glBindBuffer(GL_ARRAY_BUFFER, m_quadVertexBufferObjectID);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(m_quadVertices), m_quadVertices, GL_STATIC_DRAW);
 
-	// m_cpuRayTracedTextureID = m_rayTracer->drawCubes(m_cubes, *m_camera);
+	// Set directional light direction
+	glUseProgram(m_mainShader->m_programID);
+	ab::OpenGL::uniform3f(*m_mainShader, "dirLight.direction", m_directionalLightDirection.x, m_directionalLightDirection.y, m_directionalLightDirection.z);
 }
 
 /// <summary>
@@ -239,20 +239,72 @@ void Game::update(double t_deltaTime)
 	ImGui_ImplSDL2_NewFrame(m_window);
 	ImGui::NewFrame();
 
-	// ImGUI test
-	ImGui::Begin("Camera");
-	ImGui::Text("Position:");
-	ImGui::Text("X: %f", m_camera->getEye().x);
-	ImGui::Text("Y: %f", m_camera->getEye().y);
-	ImGui::Text("Z: %f", m_camera->getEye().z);
-	ImGui::End();
-
 	// Update camera and controls
 	m_camera->update(t_deltaTime);
 
 	// Update view and projection matrices
 	ab::OpenGL::uniformMatrix4fv(*m_mainShader, "view", &m_camera->getView()[0][0]);
 	ab::OpenGL::uniformMatrix4fv(*m_mainShader, "projection", &m_camera->getProjection()[0][0]);
+
+	// ****************************
+	// ** Dear ImGUI stuff below **
+	// ****************************
+
+	// Settings
+	ImGui::Begin("SETTINGS");
+
+	// Camera
+	ImGui::Text("CAMERA");
+	ImGui::Separator();
+	ImGui::BulletText("Position");
+	ImGui::InputFloat("X pos", &m_cameraEye.x);
+	ImGui::InputFloat("Y pos", &m_cameraEye.y);
+	ImGui::InputFloat("Z pos", &m_cameraEye.z);
+
+	if (ImGui::Button("SET POSITION"))
+	{
+		m_camera->setEye(m_cameraEye);
+	}
+
+	ImGui::Separator();
+	ImGui::BulletText("Current Position");
+	ImGui::Text("X: %f", m_camera->getEye().x);
+	ImGui::Text("Y: %f", m_camera->getEye().y);
+	ImGui::Text("Z: %f", m_camera->getEye().z);
+	ImGui::Separator();
+	ImGui::Separator();
+	ImGui::Separator();
+
+	// Directional light
+	ImGui::Text("DIRECTIONAL LIGHT");
+	ImGui::Separator();
+	ImGui::BulletText("Direction");
+	ImGui::InputFloat("X dir", &m_directionalLightDirection.x);
+	ImGui::InputFloat("Y dir", &m_directionalLightDirection.y);
+	ImGui::InputFloat("Z dir", &m_directionalLightDirection.z);
+
+	if (ImGui::Button("SET DIRECTION"))
+	{ 
+		ab::OpenGL::uniform3f(*m_mainShader, "dirLight.direction", m_directionalLightDirection.x, m_directionalLightDirection.y, m_directionalLightDirection.z);
+	}
+
+	ImGui::Separator();
+	ImGui::ColorPicker3("Ambient", m_directionalLightAmbient);
+	ImGui::Separator();
+	ImGui::ColorPicker3("Diffuse", m_directionalLightDiffuse);
+	ImGui::Separator();
+	ImGui::Separator();
+	ImGui::Separator();
+
+	// Graphics settings
+	const char *test_desc[] = { "Rasterization", "Raytracing" };
+	ImGui::Checkbox("Wireframe Mode (only works with rasterization)", &m_wireframeMode);
+	ImGui::Checkbox("Raytracing On", &m_raytracingOn);
+	ImGui::End();
+
+	// Update lighting parameters	
+	ab::OpenGL::uniform3f(*m_mainShader, "dirLight.ambient", m_directionalLightAmbient[0], m_directionalLightAmbient[1], m_directionalLightAmbient[2]);
+	ab::OpenGL::uniform3f(*m_mainShader, "dirLight.diffuse", m_directionalLightDiffuse[0], m_directionalLightDiffuse[1], m_directionalLightDiffuse[2]);
 }
 
 /// <summary>
@@ -260,24 +312,42 @@ void Game::update(double t_deltaTime)
 /// </summary>
 void Game::draw()
 {
+	// Activate wireframe mode
+	if (m_wireframeMode)
+	{
+		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE); // Turn on
+	}
+
 	// Clear screen
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	// Activate shader
-	glUseProgram(m_mainShader->m_programID);
+	if (!m_raytracingOn)
+	{
+		// Activate shader
+		glUseProgram(m_mainShader->m_programID);
 
-	// Draw test cube
-	ab::OpenGL::uniformMatrix4fv(*m_mainShader, "model", &m_cube.matrix[0][0]);
-	ab::OpenGL::draw(m_cube, m_mainShader, "diffuseTexture");
-
+		// Draw test cube
+		ab::OpenGL::uniformMatrix4fv(*m_mainShader, "model", &m_cube.matrix[0][0]);
+		ab::OpenGL::uniform3f(*m_mainShader, "viewPosition", m_camera->getEye().x, m_camera->getEye().y, m_camera->getEye().z);
+		ab::OpenGL::draw(m_cube, m_mainShader, "diffuseTexture");
+	}
+	else
+	{
+		raytrace();
+	}	
+	
 	// Render ImGUI stuff
 	ImGui::Render();
-	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-
-	// raytrace();
+	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());	
 	
 	// Display everything
 	SDL_GL_SwapWindow(m_window);
+
+	// Deactivate wireframe mode
+	if (m_wireframeMode)
+	{
+		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL); // Turn off
+	}
 }
 
 /// <summary>
@@ -291,6 +361,13 @@ void Game::initialiseRaytracing()
 	glGetProgramiv(m_computeShader->m_programID, GL_COMPUTE_WORK_GROUP_SIZE, workGroupSize);
 	m_workGroupSizeX = workGroupSize[0];
 	m_workGroupSizeY = workGroupSize[1];
+
+	// Copy voxel positions to GPU
+	glGenBuffers(1, &m_voxelPositions_SSBO);
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_voxelPositions_SSBO);
+	glBufferData(GL_SHADER_STORAGE_BUFFER, m_voxelPositions.size() * sizeof(glm::vec4), &m_voxelPositions[0], GL_DYNAMIC_COPY);
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, m_voxelPositions_SSBO);
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 
 	glUseProgram(0);
 }
@@ -319,6 +396,10 @@ void Game::raytrace()
 
 	// Bind level 0 of framebuffer texture as writable image in the shader
 	glBindImageTexture(0, m_FBOtextureID, 0, false, 0, GL_WRITE_ONLY, GL_RGBA32F);
+
+	// Voxel buffer object
+	// glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_voxelPositions_SSBO);
+	// glBufferData(GL_SHADER_STORAGE_BUFFER, m_voxelPositions.size() * sizeof(glm::vec3), &m_voxelPositions[0], GL_READ_ONLY);
 
 	// Compute appropriate invocation dimension
 	int f_worksizeX = ab::OpenGL::nextPowerOfTwo(1280);

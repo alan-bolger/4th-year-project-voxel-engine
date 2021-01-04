@@ -14,11 +14,11 @@ namespace ab
 	public:
 		Camera(XboxOneController &t_controller);
 		~Camera();
-		void camera(glm::vec3 t_eye, double t_pitch, double t_yaw);
 		glm::mat4 getView();
 		glm::mat4 getProjection();
 		glm::vec3 getDirection();
 		glm::vec3 getEye();
+		void setEye(glm::vec3 t_position);
 		void getEyeRay(float t_x, float t_y, glm::vec3 &t_result);
 		void update(double t_deltaTime);
 
@@ -37,6 +37,8 @@ namespace ab
 		float m_pitchSpeed = 0.2f;
 		double m_yaw{ 0.0 }; // In degrees
 		double m_pitch{ 0.0 }; // In degrees
+
+		void camera(glm::vec3 t_eye, double t_pitch, double t_yaw);
 	};
 }
 

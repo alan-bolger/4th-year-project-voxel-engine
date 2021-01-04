@@ -46,6 +46,13 @@ private:
 	//std::vector<Sphere> m_spheres;
 	//std::vector<Cube> m_cubes;
 	ab::Model m_cube;
+	glm::vec3 m_directionalLightDirection = glm::vec3(5, -5, 5);
+	float m_directionalLightAmbient[3] = { 1.f, 1.f, 1.f };
+	float m_directionalLightDiffuse[3] = { 1.f, 1.f, 1.f };
+	bool m_wireframeMode = false;
+	glm::vec3 m_cameraEye;
+	int m_comboType = 0;
+	bool m_raytracingOn = true;
 
 	// Quad for render to texture
 	GLuint m_quadVertexArrayObjectID;
@@ -72,6 +79,8 @@ private:
 	GLuint m_frameBufferID;
 	GLuint m_FBOtextureID;
 	glm::vec3 m_eyeRay;
+	GLuint m_voxelPositions_SSBO;
+	std::vector<glm::vec4> m_voxelPositions;
 
 	void initialise();
 	void processEvents();
