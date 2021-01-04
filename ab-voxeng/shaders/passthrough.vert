@@ -10,10 +10,13 @@ uniform mat4 view;
 uniform mat4 projection;
 
 out vec2 texCoords;
+out vec3 fragPos;
+out vec3 normal;
 
 void main()
 {
-    mat4 MVP = projection * view * matrixInstance;
     texCoords = aTexCoords;
-    gl_Position = MVP * vec4(aPos, 1.0);
+    fragPos = vec3(matrixInstance * vec4(aPos, 1.0));
+    normal = transpose(inverse(mat3(matrixInstance))) * aNormal;
+    gl_Position = projection * view * vec4(fragPos, 1.0);
 } 

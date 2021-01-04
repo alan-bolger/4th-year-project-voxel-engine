@@ -82,6 +82,15 @@ glm::vec3 ab::Camera::getEye()
 }
 
 /// <summary>
+/// Set position of camera.
+/// </summary>
+/// <param name="t_position"></param>
+void ab::Camera::setEye(glm::vec3 t_position)
+{
+	m_eye = t_position;
+}
+
+/// <summary>
 /// Compute the world direction vector.
 /// </summary>
 /// <param name="t_x">The X coordinate within [-1..1].</param>
