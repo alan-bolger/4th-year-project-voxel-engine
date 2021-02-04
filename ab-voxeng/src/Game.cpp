@@ -11,24 +11,6 @@
 Game::Game(int t_width, int t_height) 
 {
 	m_window = SDL_CreateWindow("Voxel Engine [Alan Bolger]", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, t_width, t_height, SDL_WINDOW_OPENGL);
-
-	//// Put test stuff here so I can find it easily
-	//m_spheres.push_back(Sphere(glm::vec3(0.0, -10004, -20), 10000, glm::vec3(0.20, 0.20, 1.0), 0, 0.0));
-	//m_spheres.push_back(Sphere(glm::vec3(0.0, 0, -20), 4, glm::vec3(1.00, 0.32, 0.36), 1, 0.5));
-	//m_spheres.push_back(Sphere(glm::vec3(5.0, -1, -15), 2, glm::vec3(0.90, 0.76, 0.46), 1, 0.0));
-	//m_spheres.push_back(Sphere(glm::vec3(5.0, 0, -25), 3, glm::vec3(0.65, 0.77, 0.97), 1, 0.0));
-	//m_spheres.push_back(Sphere(glm::vec3(-5.5, 0, -15), 3, glm::vec3(0.90, 0.90, 0.90), 1, 0.0));
-	//m_spheres.push_back(Sphere(glm::vec3(0.0, 20, -30), 3, glm::vec3(0.00, 0.00, 0.00), 0, 0.0, glm::vec3(3))); // Light
-
-	//glm::vec3 boundingBoxSize = glm::vec3(8, 8, 8);
-
-	//m_cubes.push_back(Cube(glm::vec3(10.0, -10004, -20), glm::vec3(10000, 10000, 10000), glm::vec3(1, 1, 1), 0.0f, 0.f));
-	//m_cubes.push_back(Cube(glm::vec3(-10, 2, 0), boundingBoxSize, glm::vec3(1.00, 0.32, 0.36), 0.0, 0.0));
-	//m_cubes.push_back(Cube(glm::vec3(0, 4, 0), boundingBoxSize, glm::vec3(0.90, 0.76, 0.46), 0.5, 0.0));
-	//m_cubes.push_back(Cube(glm::vec3(10, 6, 0), boundingBoxSize, glm::vec3(0.65, 0.77, 0.97), 0.5, 0.0));
-	//m_cubes.push_back(Cube(glm::vec3(20, 8, 0), boundingBoxSize, glm::vec3(0.90, 0.90, 0.90), 0.5, 0.0));
-	//m_cubes.push_back(Cube(glm::vec3(0.0, -10, 0), boundingBoxSize, glm::vec3(0.00, 0.00, 0.00), 0.0, 0.0, glm::vec3(3))); // Light
-
 	initialise();
 }
 
@@ -154,7 +136,7 @@ void Game::initialise()
 	m_looping = true;
 
 	// Controller
-	m_controller = new ab::XboxOneController(0);
+	m_controller = new ab::XboxOneController(0); // Zero is the controller index value
 
 	// Camera
 	m_camera = new ab::Camera(*m_controller);
@@ -177,12 +159,9 @@ void Game::initialise()
 		for (int x = 0; x < 256; ++x)
 		{
 			m_cube.instancingPositions.push_back(glm::translate(glm::mat4(1.0f), m_terrain->m_boxes[y][x].center));
-			m_voxelPositions.push_back(glm::vec4(m_terrain->m_boxes[y][x].center, 1.0));
+			m_voxelPositions.push_back(glm::vec4(m_terrain->m_boxes[y][x].center, 1.0)); // SSBO pads vec3 to vec4 under std430
 		}
 	}
-
-	// Ray tracer
-	// m_rayTracer = new ab::RayTracer();
 
 	// Test model
 	ab::OpenGL::import("models/generic-block.obj", m_cube, "models/grass-block.png");
@@ -224,6 +203,19 @@ void Game::processEvents()
 			m_looping = false;
 		}
 
+		if (f_event.type == SDL_MOUSEMOTION)
+		{
+			// Normalised coordinates
+			m_mousePos.x = (2.0f * f_event.motion.x) / 1280 - 1.0f;
+			m_mousePos.y = 1.0f - (2.0f * f_event.motion.y) / 720;
+		}
+
+		// When left mouse button is clicked, cast a ray from the current cursor position
+		if (f_event.type == SDL_MOUSEBUTTONDOWN)
+		{
+			m_camera->getEyeRay(m_mousePos.x, m_mousePos.y, m_rayDirection);
+		}
+
 		m_controller->processEvents(f_event);
 	}
 }
@@ -243,6 +235,7 @@ void Game::update(double t_deltaTime)
 	m_camera->update(t_deltaTime);
 
 	// Update view and projection matrices
+	glUseProgram(m_mainShader->m_programID);
 	ab::OpenGL::uniformMatrix4fv(*m_mainShader, "view", &m_camera->getView()[0][0]);
 	ab::OpenGL::uniformMatrix4fv(*m_mainShader, "projection", &m_camera->getProjection()[0][0]);
 
@@ -252,6 +245,21 @@ void Game::update(double t_deltaTime)
 
 	// Settings
 	ImGui::Begin("SETTINGS");
+
+	// Mouse
+	ImGui::Text("MOUSE");
+	ImGui::Separator();
+	ImGui::BulletText("Position");
+	ImGui::InputFloat("X pos", &m_mousePos.x);
+	ImGui::InputFloat("Y pos", &m_mousePos.y);
+	ImGui::Separator();
+	ImGui::BulletText("Ray Direction");
+	ImGui::InputFloat("X dir", &m_rayDirection.x);
+	ImGui::InputFloat("Y dir", &m_rayDirection.y);
+	ImGui::InputFloat("Z dir", &m_rayDirection.z);
+	ImGui::Separator();
+	ImGui::Separator();
+	ImGui::Separator();
 
 	// Camera
 	ImGui::Text("CAMERA");
@@ -297,9 +305,8 @@ void Game::update(double t_deltaTime)
 	ImGui::Separator();
 
 	// Graphics settings
-	const char *test_desc[] = { "Rasterization", "Raytracing" };
 	ImGui::Checkbox("Wireframe Mode (only works with rasterization)", &m_wireframeMode);
-	ImGui::Checkbox("Raytracing On", &m_raytracingOn);
+	//ImGui::Checkbox("Raytracing On (deactivates rasterization)", &m_raytracingOn); // This breaks everything for some reason
 	ImGui::End();
 
 	// Update lighting parameters	
@@ -334,7 +341,7 @@ void Game::draw()
 	else
 	{
 		raytrace();
-	}	
+	}
 	
 	// Render ImGUI stuff
 	ImGui::Render();
@@ -398,8 +405,8 @@ void Game::raytrace()
 	glBindImageTexture(0, m_FBOtextureID, 0, false, 0, GL_WRITE_ONLY, GL_RGBA32F);
 
 	// Voxel buffer object
-	// glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_voxelPositions_SSBO);
-	// glBufferData(GL_SHADER_STORAGE_BUFFER, m_voxelPositions.size() * sizeof(glm::vec3), &m_voxelPositions[0], GL_READ_ONLY);
+	//glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_voxelPositions_SSBO);
+	//glBufferData(GL_SHADER_STORAGE_BUFFER, m_voxelPositions.size() * sizeof(glm::vec3), &m_voxelPositions[0], GL_READ_ONLY);
 
 	// Compute appropriate invocation dimension
 	int f_worksizeX = ab::OpenGL::nextPowerOfTwo(1280);
@@ -411,7 +418,6 @@ void Game::raytrace()
 	// Reset image binding
 	glBindImageTexture(0, 0, 0, false, 0, GL_READ_WRITE, GL_RGBA32F);
 	glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
-	glUseProgram(0);
 
 	// Render image on a quad
 	renderTextureToQuad(m_FBOtextureID);

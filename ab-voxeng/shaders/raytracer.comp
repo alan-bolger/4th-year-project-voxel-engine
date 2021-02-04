@@ -21,8 +21,8 @@ struct directionalLight
 
 directionalLight light;
 
-#define MAX_SCENE_BOUNDS 100.0
-#define NUM_BOXES 65536 / 4
+#define MAX_SCENE_BOUNDS 50.0
+#define NUM_BOXES 65536 / 2
 
 vec3 cubeSize = vec3(0.5, 0.5, 0.5);
 
@@ -102,7 +102,7 @@ vec4 trace(vec3 origin, vec3 dir)
     return vec4(0, 0, 0, 1.0);
 }
 
-layout (local_size_x = 16, local_size_y = 8) in;
+layout (local_size_x = 32, local_size_y = 16) in;
 
 void main(void) 
 {

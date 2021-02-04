@@ -1,3 +1,7 @@
+// *************************************************
+// * Terrain.h and Terrain.cpp - Alan Bolger, 2020 *
+// *************************************************
+
 #ifndef TERRAIN_H
 #define TERRAIN_H
 

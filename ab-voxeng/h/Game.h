@@ -1,3 +1,7 @@
+// *******************************************
+// * Game.h and Game.cpp - Alan Bolger, 2020 *
+// *******************************************
+
 #ifndef GAME_H
 #define GAME_H
 
@@ -42,17 +46,16 @@ private:
 	ab::Shader *m_renderQuadShader;
 	ab::Shader *m_computeShader;
 	ab::Terrain *m_terrain;
-	// ab::RayTracer *m_rayTracer;
-	//std::vector<Sphere> m_spheres;
-	//std::vector<Cube> m_cubes;
 	ab::Model m_cube;
-	glm::vec3 m_directionalLightDirection = glm::vec3(5, -5, 5);
+	glm::vec3 m_directionalLightDirection = glm::vec3(1, -5, 1);
 	float m_directionalLightAmbient[3] = { 1.f, 1.f, 1.f };
 	float m_directionalLightDiffuse[3] = { 1.f, 1.f, 1.f };
 	bool m_wireframeMode = false;
+	glm::vec2 m_mousePos;
+	glm::vec3 m_rayDirection;
 	glm::vec3 m_cameraEye;
 	int m_comboType = 0;
-	bool m_raytracingOn = true;
+	bool m_raytracingOn = false;
 
 	// Quad for render to texture
 	GLuint m_quadVertexArrayObjectID;
@@ -69,9 +72,6 @@ private:
 		 1.0f, -1.0f, 0.0f,
 		 1.0f,  1.0f, 0.0f,
 	};
-
-	// CPU raytracing stuff
-	GLuint m_cpuRayTracedTextureID;
 
 	// Compute shader stuff
 	GLint m_workGroupSizeX;

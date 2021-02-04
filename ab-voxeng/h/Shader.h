@@ -1,3 +1,8 @@
+// ************************************************************************************
+// * Shader.h and Shader.cpp contains snippets of code taken from the following site: *
+// * http://www.opengl-tutorial.org													  *
+// ************************************************************************************
+
 #ifndef SHADER_H
 #define SHADER_H
 

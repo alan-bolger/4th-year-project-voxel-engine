@@ -19,15 +19,15 @@
     <Filter Include="ImGUI">
       <UniqueIdentifier>{9cdec935-d2c5-4ef4-adec-28d72da3cb24}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Octree">
+      <UniqueIdentifier>{fc08d3cc-b482-4169-8488-58b3915578a5}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Game.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\Main.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Octree.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\Clock.cpp">
@@ -52,15 +52,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\Terrain.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Sphere.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Cube.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\RayTracer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="libs\imgui\imgui.cpp">
@@ -92,9 +83,6 @@
     <ClInclude Include="h\Game.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="h\Octree.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="h\Clock.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -123,18 +111,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="h\Terrain.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="h\Sphere.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="h\Cube.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="h\RayTracer.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="h\Geometry.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

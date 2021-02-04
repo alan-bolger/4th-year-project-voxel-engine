@@ -1,3 +1,7 @@
+// *********************************************************************
+// * XboxOneController.h and XboxOneController.cpp - Alan Bolger, 2020 *
+// *********************************************************************
+
 #ifndef XBOXONECONTROLLER_H
 #define XBOXONECONTROLLER_H
 

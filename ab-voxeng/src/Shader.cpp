@@ -73,8 +73,8 @@ GLuint ab::Shader::compileShader(GLuint t_type, const std::string &t_source)
 	GLuint f_shader = glCreateShader(t_type);
 
 	// Load shader program into shader object
-	const char *src = t_source.c_str();
-	glShaderSource(f_shader, 1, &src, nullptr);
+	const char *f_src = t_source.c_str();
+	glShaderSource(f_shader, 1, &f_src, nullptr);
 
 	// Compile the shader program
 	glCompileShader(f_shader);
