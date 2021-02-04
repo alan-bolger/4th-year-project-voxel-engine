@@ -121,14 +121,14 @@ void ab::OpenGL::import(const char *t_modelFilename, ab::Model &t_model, std::st
 /// </summary>
 /// <param name="t_model">The data struct that holds all model data.</param>
 /// <param name="t_shader">Shader class object.</param>
-/// <param name="t_uniformName>[OPTIONAL] The name of the sampler2D uniform as it is in the shader. The model's texture gets sent to this uniform.</param>
+/// <param name="t_uniformName">[OPTIONAL] The name of the sampler2D uniform as it is in the shader. The model's texture gets sent to this uniform.</param>
 void ab::OpenGL::draw(Model &t_model, Shader *t_shader, std::string t_uniformName)
 {
 	if (t_shader != nullptr && t_uniformName != "")
 	{
-		glActiveTexture(GL_TEXTURE1);
+		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, t_model.diffuseTextureID);
-		glUniform1i(glGetUniformLocation(t_shader->m_programID, t_uniformName.c_str()), 1);
+		glUniform1i(glGetUniformLocation(t_shader->m_programID, t_uniformName.c_str()), 0);
 	}
 	
 	glBindVertexArray(t_model.vertexArrayObjectID);
@@ -188,7 +188,7 @@ int ab::OpenGL::nextPowerOfTwo(int t_x)
 }
 
 /// <summary>
-/// Uniform 3f
+/// Uniform 3f.
 /// </summary>
 /// <param name="t_shader">Shader class object.</param>
 /// <param name="t_uniformName">The name of the uniform as it is in the shader.</param>
@@ -201,7 +201,7 @@ void ab::OpenGL::uniform3f(Shader &t_shader, std::string t_uniformName, float t_
 }
 
 /// <summary>
-/// 
+/// Uniform 1i.
 /// </summary>
 /// <param name="t_shader">Shader class object.</param>
 /// <param name="t_uniformName">The name of the uniform as it is in the shader.</param>
@@ -212,7 +212,7 @@ void ab::OpenGL::uniform1i(Shader &t_shader, std::string t_uniformName, GLint t_
 }
 
 /// <summary>
-/// Uniform 4fv
+/// Uniform 4fv.
 /// </summary>
 /// <param name="t_shader">Shader class object.</param>
 /// <param name="t_uniformName">The name of the uniform as it is in the shader.</param>

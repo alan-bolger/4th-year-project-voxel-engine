@@ -1,3 +1,9 @@
+// ********************************************************************************
+// * Noise.h and Noise.cpp contains code based on the research paper			  *
+// * 'Simplex Noise Demystified' by Stefan Gustavson, 2005.						  *
+// * https://www.researchgate.net/publication/216813608_Simplex_noise_demystified *
+// ********************************************************************************
+
 #ifndef NOISE_H
 #define NOISE_H
 

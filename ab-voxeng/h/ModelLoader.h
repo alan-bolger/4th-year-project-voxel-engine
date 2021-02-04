@@ -1,3 +1,7 @@
+// *********************************************************
+// * ModelLoader.h and ModelLoader.cpp - Alan Bolger, 2020 *
+// *********************************************************
+
 #pragma warning(disable : 4996)
 
 #ifndef MODELLOADER_H
