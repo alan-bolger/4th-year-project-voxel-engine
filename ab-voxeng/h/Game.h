@@ -8,6 +8,7 @@
 #include <iostream>
 #include <windows.h>
 #include <psapi.h>
+#include <vector>
 
 #include "glew/glew.h"
 #include "glew/wglew.h"
@@ -35,6 +36,15 @@ public:
 	void start();
 
 private:
+	// TODO: Move this struct somewhere else
+	struct HitInfo
+	{
+		int m_bi;
+		glm::vec2 m_lambda;
+		glm::vec3 m_center;
+	}
+	m_hitInfo;
+
 	SDL_Window *m_window;
 	SDL_GLContext m_glContext;
 	double m_frameRate;
@@ -54,8 +64,10 @@ private:
 	glm::vec2 m_mousePos;
 	glm::vec3 m_rayDirection;
 	glm::vec3 m_cameraEye;
+	glm::vec4 m_selectedCube;
 	int m_comboType = 0;
 	bool m_raytracingOn = false;
+	bool m_instanceArrayUpdated = false;
 
 	// Quad for render to texture
 	GLuint m_quadVertexArrayObjectID;
@@ -89,6 +101,8 @@ private:
 	void initialiseRaytracing();
 	void raytrace();
 	void renderTextureToQuad(GLuint &t_textureID);
+	glm::vec2 intersectCube(glm::vec3 t_origin, glm::vec3 t_direction, glm::vec4 t_cubeCenter);
+	bool checkAllCubesIntersect(glm::vec3 t_origin, glm::vec3 t_direction, HitInfo &t_hitInfo);
 };
 
 #endif // !GAME_H

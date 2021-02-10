@@ -24,6 +24,7 @@ namespace ab
 		glm::vec3 getEye();
 		void setEye(glm::vec3 t_position);
 		void getEyeRay(float t_x, float t_y, glm::vec3 &t_result);
+		glm::vec3 getRayFromMousePos(float t_x, float t_y);
 		void update(double t_deltaTime);
 
 	private:
