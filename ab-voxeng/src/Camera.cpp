@@ -92,6 +92,7 @@ void ab::Camera::setEye(glm::vec3 t_position)
 
 /// <summary>
 /// Compute the world direction vector.
+/// This function is used for ray tracing.
 /// </summary>
 /// <param name="t_x">The X coordinate within [-1..1].</param>
 /// <param name="t_y">The Y coordinate within [-1..1].</param>
@@ -105,6 +106,27 @@ void ab::Camera::getEyeRay(float t_x, float t_y, glm::vec3 &t_result)
 	f_temp_1 = f_temp_1 * (1.0f / f_temp_1.w);
 	glm::vec3 f_temp_2 = glm::vec3(f_temp_1.x, f_temp_1.y, f_temp_1.z);
 	t_result = f_temp_2 - m_eye;
+}
+
+/// <summary>
+/// Cast a ray from the mouse position.
+/// This function is used for mouse picking.
+/// </summary>
+/// <param name="t_x">The mouse X position</param>
+/// <param name="t_y"></param>
+/// <returns></returns>
+glm::vec3 ab::Camera::getRayFromMousePos(float t_x, float t_y)
+{
+	glm::vec2 ray_nds = glm::vec2(t_x, t_y);
+	glm::vec4 ray_clip = glm::vec4(ray_nds.x, ray_nds.y, -1.0f, 1.0f);
+	glm::mat4 invProjMat = glm::inverse(getProjection());
+	glm::vec4 eyeCoords = invProjMat * ray_clip;
+	eyeCoords = glm::vec4(eyeCoords.x, eyeCoords.y, -1.0f, 0.0f);
+	glm::mat4 invViewMat = glm::inverse(getView());
+	glm::vec4 rayWorld = invViewMat * eyeCoords;
+	glm::vec3 rayDirection = glm::normalize(glm::vec3(rayWorld));
+
+	return rayDirection;
 }
 
 /// <summary>

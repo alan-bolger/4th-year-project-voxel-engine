@@ -81,8 +81,8 @@ void Game::initialise()
 	ImGui::StyleColorsDark();
 
 	// Setup Platform/Renderer bindings
-	// window is the SDL_Window*
-	// context is the SDL_GLContext
+	// m_window is the SDL_Window*
+	// m_context is the SDL_GLContext
 	ImGui_ImplSDL2_InitForOpenGL(m_window, m_glContext);
 	ImGui_ImplOpenGL3_Init();
 
@@ -107,7 +107,7 @@ void Game::initialise()
 	}
 
 	// Use v-sync
-	// TODO: Still not sure about v-sync
+	// TODO: Still not sure about v-sync - Can I toggle this during runtime?
 	if (SDL_GL_SetSwapInterval(1) < 0)
 	{
 		std::cout << "Warning: Unable to set VSync! Error: %s\n", SDL_GetError();
@@ -152,8 +152,6 @@ void Game::initialise()
 	m_terrain->generate(256, 256);
 
 	// This is temp stuff for testing
-	// glm::mat4 f_translationMatrix;
-
 	for (int y = 0; y < 256; ++y)
 	{
 		for (int x = 0; x < 256; ++x)
@@ -186,6 +184,7 @@ void Game::initialise()
 
 /// <summary>
 /// Process events.
+/// This is where the mouse events and controller events are processed.
 /// </summary>
 void Game::processEvents()
 {
@@ -205,7 +204,7 @@ void Game::processEvents()
 
 		if (f_event.type == SDL_MOUSEMOTION)
 		{
-			// Normalised coordinates
+			// Normalised coordinates - (0, 0) is the center of the screen
 			m_mousePos.x = (2.0f * f_event.motion.x) / 1280 - 1.0f;
 			m_mousePos.y = 1.0f - (2.0f * f_event.motion.y) / 720;
 		}
@@ -214,6 +213,16 @@ void Game::processEvents()
 		if (f_event.type == SDL_MOUSEBUTTONDOWN)
 		{
 			m_camera->getEyeRay(m_mousePos.x, m_mousePos.y, m_rayDirection);
+
+			if (checkAllCubesIntersect(m_camera->getEye(), m_rayDirection, m_hitInfo))
+			{
+				auto itr_1 = m_cube.instancingPositions.begin() + m_hitInfo.m_bi;
+				m_cube.instancingPositions.erase(itr_1);
+				auto itr_2 = m_voxelPositions.begin() + m_hitInfo.m_bi;
+				m_voxelPositions.erase(itr_2);
+
+				m_instanceArrayUpdated = true;
+			}
 		}
 
 		m_controller->processEvents(f_event);
@@ -257,6 +266,20 @@ void Game::update(double t_deltaTime)
 	ImGui::InputFloat("X dir", &m_rayDirection.x);
 	ImGui::InputFloat("Y dir", &m_rayDirection.y);
 	ImGui::InputFloat("Z dir", &m_rayDirection.z);
+	ImGui::Separator();
+	ImGui::Separator();
+	ImGui::Separator();
+
+	// Currently selected cube
+	ImGui::Text("SELECTED CUBE");
+	ImGui::Separator();
+	ImGui::BulletText("Position");
+	ImGui::InputFloat("X pos", &m_selectedCube.x);
+	ImGui::InputFloat("Y pos", &m_selectedCube.y);
+	ImGui::InputFloat("Z pos", &m_selectedCube.z);
+	ImGui::Separator();
+	ImGui::BulletText("Array Element Index");
+	ImGui::Text("Index: %i", m_hitInfo.m_bi);
 	ImGui::Separator();
 	ImGui::Separator();
 	ImGui::Separator();
@@ -333,6 +356,15 @@ void Game::draw()
 		// Activate shader
 		glUseProgram(m_mainShader->m_programID);
 
+		// If the instance array has changed then update it
+		if (m_instanceArrayUpdated)
+		{
+			glBindBuffer(GL_ARRAY_BUFFER, m_cube.instanceBufferID);
+			glBufferSubData(GL_ARRAY_BUFFER, 0, m_cube.instancingPositions.size() * sizeof(glm::mat4), &m_cube.instancingPositions[0]);
+
+			m_instanceArrayUpdated = false;
+		}
+
 		// Draw test cube
 		ab::OpenGL::uniformMatrix4fv(*m_mainShader, "model", &m_cube.matrix[0][0]);
 		ab::OpenGL::uniform3f(*m_mainShader, "viewPosition", m_camera->getEye().x, m_camera->getEye().y, m_camera->getEye().z);
@@ -405,8 +437,8 @@ void Game::raytrace()
 	glBindImageTexture(0, m_FBOtextureID, 0, false, 0, GL_WRITE_ONLY, GL_RGBA32F);
 
 	// Voxel buffer object
-	//glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_voxelPositions_SSBO);
-	//glBufferData(GL_SHADER_STORAGE_BUFFER, m_voxelPositions.size() * sizeof(glm::vec3), &m_voxelPositions[0], GL_READ_ONLY);
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_voxelPositions_SSBO);
+	glBufferData(GL_SHADER_STORAGE_BUFFER, m_voxelPositions.size() * sizeof(glm::vec3), &m_voxelPositions[0], GL_READ_ONLY);
 
 	// Compute appropriate invocation dimension
 	int f_worksizeX = ab::OpenGL::nextPowerOfTwo(1280);
@@ -426,6 +458,7 @@ void Game::raytrace()
 /// <summary>
 /// Draw a quad and render a texture to it.
 /// </summary>
+/// <param name="t_textureID">The ID of the texture.</param>
 void Game::renderTextureToQuad(GLuint &t_textureID)
 {
 	glUseProgram(m_renderQuadShader->m_programID);
@@ -445,4 +478,57 @@ void Game::renderTextureToQuad(GLuint &t_textureID)
 
 	// Disable vertex attribute array
 	glDisableVertexAttribArray(0);
+}
+
+/// <summary>
+/// Function to check if a cube is being intersected.
+/// </summary>
+/// <param name="t_origin">The ray's origin point.</param>
+/// <param name="t_direction">The ray's direction.</param>
+/// <param name="t_cubeCenter">The center of the cube being checked.</param>
+/// <returns>The near and far values.</returns>
+glm::vec2 Game::intersectCube(glm::vec3 t_origin, glm::vec3 t_direction, glm::vec4 t_cubeCenter)
+{
+	glm::vec3 f_cubeSize(0.5, 0.5, 0.5);
+	glm::vec3 f_cubeCenter = glm::vec3(t_cubeCenter.x, t_cubeCenter.y, t_cubeCenter.z);
+
+	glm::vec3 f_min = ((f_cubeCenter - f_cubeSize) - t_origin) / t_direction;
+	glm::vec3 f_max = ((f_cubeCenter + f_cubeSize) - t_origin) / t_direction;
+	glm::vec3 f_t1 = glm::min(f_min, f_max);
+	glm::vec3 f_t2 = glm::max(f_min, f_max);
+
+	float f_near = std::max(std::max(f_t1.x, f_t1.y), f_t1.z);
+	float f_far = std::min(std::min(f_t2.x, f_t2.y), f_t2.z);
+
+	return glm::vec2(f_near, f_far);
+}
+
+/// <summary>
+/// This function checks every cube in the world to see if a ray has intersected with it.
+/// Currently, this function is horrible and inefficient but will do for testing purposes.
+/// </summary>
+/// <param name="t_origin">The ray's origin point.</param>
+/// <param name="t_direction">The ray's direction.</param>
+/// <param name="t_hitInfo">Stores the information from the cube that was intersected.</param>
+/// <returns>True if an intersection has occurred.</returns>
+bool Game::checkAllCubesIntersect(glm::vec3 t_origin, glm::vec3 t_direction, HitInfo &t_hitInfo)
+{
+	float f_smallest = m_cube.instancingPositions.size();
+	bool f_found = false;
+
+	for (int i = 0; i < m_voxelPositions.size(); i++)
+	{
+		glm::vec2 f_lambda = intersectCube(t_origin, t_direction, m_voxelPositions[i]);
+
+		if (f_lambda.x > 0.0 && f_lambda.x < f_lambda.y && f_lambda.x < f_smallest)
+		{
+			t_hitInfo.m_lambda = f_lambda;
+			t_hitInfo.m_bi = i;
+			f_smallest = f_lambda.x;
+			m_selectedCube = m_voxelPositions[i];
+			f_found = true;
+		}
+	}
+
+	return f_found;
 }
