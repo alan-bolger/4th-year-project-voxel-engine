@@ -10,6 +10,8 @@
 /// <param name="t_height">The height of the window.</param>
 Game::Game(int t_width, int t_height) 
 {
+	SCREEN_WIDTH = t_width;
+	SCREEN_HEIGHT = t_height;
 	m_window = SDL_CreateWindow("Voxel Engine [Alan Bolger]", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, t_width, t_height, SDL_WINDOW_OPENGL);
 	initialise();
 }
@@ -28,6 +30,7 @@ Game::~Game()
 	delete m_renderQuadShader;
 	delete m_computeShader;
 	delete m_terrain;
+	delete m_voxelOctree;
 
 	ImGui_ImplOpenGL3_Shutdown();
 	ImGui_ImplSDL2_Shutdown();
@@ -152,12 +155,41 @@ void Game::initialise()
 	m_terrain->generate(256, 256);
 
 	// This is temp stuff for testing
+	//for (int y = 0; y < 256; ++y)
+	//{
+	//	for (int x = 0; x < 256; ++x)
+	//	{
+	//		m_cube.instancingPositions.push_back(glm::translate(glm::mat4(1.0f), m_terrain->m_boxes[y][x].center));
+	//		m_voxelPositions.push_back(glm::vec4(m_terrain->m_boxes[y][x].center, 1.0)); // SSBO pads vec3 to vec4 under std430
+	//	}
+	//}
+
+	m_voxelOctree = new Octree<bool>(256); // Create octree of size 256 x 256 x 256
+	m_voxelOctree->setEmptyValue(false); // Set empty node values to false
+
+	// Populate octree
 	for (int y = 0; y < 256; ++y)
 	{
 		for (int x = 0; x < 256; ++x)
 		{
-			m_cube.instancingPositions.push_back(glm::translate(glm::mat4(1.0f), m_terrain->m_boxes[y][x].center));
-			m_voxelPositions.push_back(glm::vec4(m_terrain->m_boxes[y][x].center, 1.0)); // SSBO pads vec3 to vec4 under std430
+			int boxY = m_terrain->m_boxes[y][x].center.y;
+			m_voxelOctree->set(x, boxY, y, true);
+		}
+	}
+
+	// Copy octree contents to arrays for shader usage (functional but used for testing too)
+	for (int z = 0; z < 256; ++z)
+	{
+		for (int y = 0; y < 256; ++y)
+		{
+			for (int x = 0; x < 256; ++x)
+			{
+				if (m_voxelOctree->at(x, y, z) == true)
+				{
+					m_cube.instancingPositions.push_back(glm::translate(glm::mat4(1.0f), glm::vec3(x, y, z)));
+					m_voxelPositions.push_back(glm::vec4(x, y, z, 1.0)); // SSBO pads vec3 to vec4 under std430
+				}				
+			}
 		}
 	}
 
@@ -205,23 +237,54 @@ void Game::processEvents()
 		if (f_event.type == SDL_MOUSEMOTION)
 		{
 			// Normalised coordinates - (0, 0) is the center of the screen
-			m_mousePos.x = (2.0f * f_event.motion.x) / 1280 - 1.0f;
-			m_mousePos.y = 1.0f - (2.0f * f_event.motion.y) / 720;
+			m_mousePos.x = (2.0f * f_event.motion.x) / SCREEN_WIDTH - 1.0f;
+			m_mousePos.y = 1.0f - (2.0f * f_event.motion.y) / SCREEN_HEIGHT;
 		}
 
 		// When left mouse button is clicked, cast a ray from the current cursor position
-		if (f_event.type == SDL_MOUSEBUTTONDOWN)
+		if (f_event.type == SDL_MOUSEBUTTONDOWN) // This is crap
 		{
-			m_camera->getEyeRay(m_mousePos.x, m_mousePos.y, m_rayDirection);
-
-			if (checkAllCubesIntersect(m_camera->getEye(), m_rayDirection, m_hitInfo))
+			if (f_event.button.button == SDL_BUTTON_LEFT) // Yeah, button.button, it's legit
 			{
-				auto itr_1 = m_cube.instancingPositions.begin() + m_hitInfo.m_bi;
-				m_cube.instancingPositions.erase(itr_1);
-				auto itr_2 = m_voxelPositions.begin() + m_hitInfo.m_bi;
-				m_voxelPositions.erase(itr_2);
+				//m_camera->getEyeRay(m_mousePos.x, m_mousePos.y, m_rayDirection);
 
-				m_instanceArrayUpdated = true;
+				//if (checkAllCubesIntersect(m_camera->getEye(), m_rayDirection, m_hitInfo))
+				//{
+				//	auto itr_1 = m_cube.instancingPositions.begin() + m_hitInfo.m_bi;
+				//	m_cube.instancingPositions.erase(itr_1);
+				//	auto itr_2 = m_voxelPositions.begin() + m_hitInfo.m_bi;
+				//	m_voxelPositions.erase(itr_2);
+
+				//	m_instanceArrayUpdated = true;
+				//}
+
+
+				m_rayDirection = m_camera->getRayFromMousePos(m_mousePos.x, m_mousePos.y);
+				int index;
+
+				if (intersectAllCubes(m_camera->getEye(), m_rayDirection, index, m_hitPoint))
+				{
+					auto itr_1 = m_cube.instancingPositions.begin() + index;
+					m_cube.instancingPositions.erase(itr_1);
+					auto itr_2 = m_voxelPositions.begin() + index;
+					m_voxelPositions.erase(itr_2);
+					
+					m_instanceArrayUpdated = true;
+				}
+			}
+			else if (f_event.button.button == SDL_BUTTON_RIGHT)
+			{
+				m_camera->getEyeRay(m_mousePos.x, m_mousePos.y, m_rayDirection);
+
+				if (checkAllCubesIntersect(m_camera->getEye(), m_rayDirection, m_hitInfo))
+				{
+					//auto itr_1 = m_cube.instancingPositions.begin() + m_hitInfo.m_bi;
+					//m_cube.instancingPositions.erase(itr_1);
+					//auto itr_2 = m_voxelPositions.begin() + m_hitInfo.m_bi;
+					//m_voxelPositions.erase(itr_2);
+
+					//m_instanceArrayUpdated = true;
+				}
 			}
 		}
 
@@ -281,23 +344,28 @@ void Game::update(double t_deltaTime)
 	ImGui::BulletText("Array Element Index");
 	ImGui::Text("Index: %i", m_hitInfo.m_bi);
 	ImGui::Separator();
+	ImGui::BulletText("Raycast Hit");
+	ImGui::InputFloat("X pos", &m_hitPoint.x);
+	ImGui::InputFloat("Y pos", &m_hitPoint.y);
+	ImGui::InputFloat("Z pos", &m_hitPoint.z);
+	ImGui::Separator();
 	ImGui::Separator();
 	ImGui::Separator();
 
 	// Camera
 	ImGui::Text("CAMERA");
-	ImGui::Separator();
-	ImGui::BulletText("Position");
-	ImGui::InputFloat("X pos", &m_cameraEye.x);
-	ImGui::InputFloat("Y pos", &m_cameraEye.y);
-	ImGui::InputFloat("Z pos", &m_cameraEye.z);
+	//ImGui::Separator();
+	//ImGui::BulletText("Position");
+	//ImGui::InputFloat("X pos", &m_cameraEye.x);
+	//ImGui::InputFloat("Y pos", &m_cameraEye.y);
+	//ImGui::InputFloat("Z pos", &m_cameraEye.z);
 
-	if (ImGui::Button("SET POSITION"))
-	{
-		m_camera->setEye(m_cameraEye);
-	}
+	//if (ImGui::Button("SET POSITION"))
+	//{
+	//	m_camera->setEye(m_cameraEye);
+	//}
 
-	ImGui::Separator();
+	//ImGui::Separator();
 	ImGui::BulletText("Current Position");
 	ImGui::Text("X: %f", m_camera->getEye().x);
 	ImGui::Text("Y: %f", m_camera->getEye().y);
@@ -329,7 +397,7 @@ void Game::update(double t_deltaTime)
 
 	// Graphics settings
 	ImGui::Checkbox("Wireframe Mode (only works with rasterization)", &m_wireframeMode);
-	//ImGui::Checkbox("Raytracing On (deactivates rasterization)", &m_raytracingOn); // This breaks everything for some reason
+	//ImGui::Checkbox("Raytracing On (deactivates rasterization)", &m_raytracingOn); // This breaks everything for some reason, but only if you do it during runtime - Activate at complile time and it's fine (but super slow)
 	ImGui::End();
 
 	// Update lighting parameters	
@@ -372,7 +440,7 @@ void Game::draw()
 	}
 	else
 	{
-		raytrace();
+		raytrace(); // This is a thing that does not perform well at all
 	}
 	
 	// Render ImGUI stuff
@@ -526,7 +594,7 @@ bool Game::checkAllCubesIntersect(glm::vec3 t_origin, glm::vec3 t_direction, Hit
 			t_hitInfo.m_bi = i;
 			f_smallest = f_lambda.x;
 			m_selectedCube = m_voxelPositions[i];
-			f_found = true;
+			f_found = true;			
 		}
 	}
 

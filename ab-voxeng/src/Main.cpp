@@ -2,8 +2,9 @@
 /// * ModelLoader.cpp is based on code from the OpenGL Tutorial website.		   *
 /// * http://www.opengl-tutorial.org/beginners-tutorials/tutorial-7-model-loading/ *
 /// ********************************************************************************
-/// * Shader.cpp is based on code from the 
-
+/// * Octree.cpp																   *
+/// * http://nomis80.org/code/octree.html										   *
+/// ********************************************************************************
 
 #include "Game.h"
 #include "SDL.h"

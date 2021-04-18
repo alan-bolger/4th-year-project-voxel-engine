@@ -65,7 +65,7 @@ void ab::Terrain::generate(int t_width, int t_height)
 
 			e /= (1.00 + 0.50 + 0.25 + 0.13 + 0.06 + 0.03);
 			e = (1 + e - distance) / 2;
-			e = pow(e, 4.00);
+			e = pow(e, 4.0);
 			f_elevationMap[y][x] = e;
 		}
 	}
