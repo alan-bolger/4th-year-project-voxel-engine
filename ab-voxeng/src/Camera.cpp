@@ -3,7 +3,7 @@
 /// <summary>
 /// Constructor for the Camera class.
 /// </summary>
-/// <param name="t_controller">An XboxOneController class object.</param>
+/// <param name="t_controller">A XboxOneController class object.</param>
 ab::Camera::Camera(XboxOneController &t_controller) : m_controller(t_controller)
 {
 	m_eye = glm::vec3(0.0f, 5.0f, 10.0f);
@@ -150,18 +150,18 @@ void ab::Camera::update(double t_deltaTime)
 	}
 
 	// Strafe
-	if (m_controller.m_currentState.LeftThumbStick.x > 40.0f)
-	{
-		glm::vec3 f_tempDirection(m_directionStrafe.x, m_directionStrafe.y, m_directionStrafe.z);
-		glm::normalize(f_tempDirection);
-		m_eye += f_tempDirection * static_cast<float>(t_deltaTime * m_speed);
-	}
-	else if (m_controller.m_currentState.LeftThumbStick.x < -40.0f)
-	{
-		glm::vec3 f_tempDirection(m_directionStrafe.x, m_directionStrafe.y, m_directionStrafe.z);
-		glm::normalize(f_tempDirection);
-		m_eye -= f_tempDirection * static_cast<float>(t_deltaTime * m_speed);
-	}
+	//if (m_controller.m_currentState.LeftThumbStick.x > 40.0f)
+	//{
+	//	glm::vec3 f_tempDirection(m_directionStrafe.x, m_directionStrafe.y, m_directionStrafe.z);
+	//	glm::normalize(f_tempDirection);
+	//	m_eye += f_tempDirection * static_cast<float>(t_deltaTime * m_speed);
+	//}
+	//else if (m_controller.m_currentState.LeftThumbStick.x < -40.0f)
+	//{
+	//	glm::vec3 f_tempDirection(m_directionStrafe.x, m_directionStrafe.y, m_directionStrafe.z);
+	//	glm::normalize(f_tempDirection);
+	//	m_eye -= f_tempDirection * static_cast<float>(t_deltaTime * m_speed);
+	//}
 
 	// Vertically up/down
 	if (m_controller.m_currentState.RTrigger > 50.0f)
@@ -209,13 +209,13 @@ void ab::Camera::update(double t_deltaTime)
 	// Look up and down
 	if (m_controller.m_currentState.RightThumbStick.y < -40.0f)
 	{
-		m_pitch += m_pitchSpeed * (float)t_deltaTime;
+		m_pitch += (float)m_pitchSpeed * (float)t_deltaTime;
 		m_rotationMatrix = glm::rotate(glm::mat4(1.0f), glm::radians(m_pitchSpeed * (float)t_deltaTime), glm::vec3(1.f, 0.f, 0.f));
 		m_direction = m_direction * m_rotationMatrix;
 	}
 	else if (m_controller.m_currentState.RightThumbStick.y > 40.0f)
 	{
-		m_pitch -= m_pitchSpeed * (float)t_deltaTime;
+		m_pitch -= (float)m_pitchSpeed * (float)t_deltaTime;
 		m_rotationMatrix = glm::rotate(glm::mat4(1.0f), glm::radians(-m_pitchSpeed * (float)t_deltaTime), glm::vec3(1.f, 0.f, 0.f));
 		m_direction = m_direction * m_rotationMatrix;
 	}

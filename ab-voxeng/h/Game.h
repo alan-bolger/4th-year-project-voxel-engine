@@ -10,6 +10,7 @@
 #include <psapi.h>
 #include <vector>
 
+#include "Globals.h"
 #include "glew/glew.h"
 #include "glew/wglew.h"
 #include "glm/glm.hpp"
@@ -27,6 +28,24 @@
 #include "XboxOneController.h"
 #include "Terrain.h"
 #include "Debug.h"
+#include "Octree.h"
+
+class Ray
+{
+public:
+	// TODO: Consider putting this into a struct possibly
+	Ray(const glm::vec3 &orig, const glm::vec3 &dir) : orig(orig), dir(dir)
+	{
+		invdir = 1.0f / dir;
+		sign[0] = (invdir.x < 0);
+		sign[1] = (invdir.y < 0);
+		sign[2] = (invdir.z < 0);
+	}
+
+	glm::vec3 orig, dir; // ray orig and dir 
+	glm::vec3 invdir;
+	int sign[3];
+};
 
 class Game
 {
@@ -65,9 +84,11 @@ private:
 	glm::vec3 m_rayDirection;
 	glm::vec3 m_cameraEye;
 	glm::vec4 m_selectedCube;
+	glm::vec3 m_hitPoint;
 	int m_comboType = 0;
 	bool m_raytracingOn = false;
 	bool m_instanceArrayUpdated = false;
+	Octree<bool> *m_voxelOctree;
 
 	// Quad for render to texture
 	GLuint m_quadVertexArrayObjectID;
@@ -103,6 +124,69 @@ private:
 	void renderTextureToQuad(GLuint &t_textureID);
 	glm::vec2 intersectCube(glm::vec3 t_origin, glm::vec3 t_direction, glm::vec4 t_cubeCenter);
 	bool checkAllCubesIntersect(glm::vec3 t_origin, glm::vec3 t_direction, HitInfo &t_hitInfo);
+
+	bool intersect(const Ray &r, float &t, glm::vec4 t_cubeCenter) const
+	{
+		glm::vec3 bounds[2];
+		glm::vec3 f_cubeSize(0.5, 0.5, 0.5);
+		glm::vec3 f_cubeCenter = glm::vec3(t_cubeCenter.x, t_cubeCenter.y, t_cubeCenter.z);
+
+		bounds[0] = f_cubeCenter - f_cubeSize;
+		bounds[1] = f_cubeCenter + f_cubeSize;
+
+		float tmin, tmax, tymin, tymax, tzmin, tzmax;
+
+		tmin = (bounds[r.sign[0]].x - r.orig.x) * r.invdir.x;
+		tmax = (bounds[1 - r.sign[0]].x - r.orig.x) * r.invdir.x;
+		tymin = (bounds[r.sign[1]].y - r.orig.y) * r.invdir.y;
+		tymax = (bounds[1 - r.sign[1]].y - r.orig.y) * r.invdir.y;
+
+		if ((tmin > tymax) || (tymin > tmax))
+			return false;
+
+		if (tymin > tmin)
+			tmin = tymin;
+		if (tymax < tmax)
+			tmax = tymax;
+
+		tzmin = (bounds[r.sign[2]].z - r.orig.z) * r.invdir.z;
+		tzmax = (bounds[1 - r.sign[2]].z - r.orig.z) * r.invdir.z;
+
+		if ((tmin > tzmax) || (tzmin > tmax))
+			return false;
+
+		if (tzmin > tmin)
+			tmin = tzmin;
+		if (tzmax < tmax)
+			tmax = tzmax;
+
+		t = tmin;
+
+		if (t < 0) {
+			t = tmax;
+			if (t < 0) return false;
+		}
+
+		return true;
+	}
+
+	bool intersectAllCubes(glm::vec3 t_origin, glm::vec3 t_direction, int &t_index, glm::vec3 &t_hitPoint)
+	{
+		Ray ray(t_origin, t_direction);
+		float t;
+
+		for (int i = 0; i < m_voxelPositions.size(); i++)
+		{
+			if (intersect(ray, t, m_voxelPositions[i]))
+			{
+				t_index = i;
+				m_hitPoint = ray.orig + ray.dir * t;
+				return true;
+			}
+		}
+
+		return false;
+	}
 };
 
 #endif // !GAME_H
