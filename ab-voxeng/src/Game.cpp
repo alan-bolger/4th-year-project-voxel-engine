@@ -30,7 +30,7 @@ Game::~Game()
 	delete m_renderQuadShader;
 	delete m_computeShader;
 	delete m_terrain;
-	delete m_voxelOctree;
+	//delete m_voxelOctree;
 
 	ImGui_ImplOpenGL3_Shutdown();
 	ImGui_ImplSDL2_Shutdown();
@@ -150,48 +150,69 @@ void Game::initialise()
 	m_renderQuadShader = new ab::Shader("shaders/renderquad.vert", "shaders/renderquad.frag");
 	m_computeShader = new ab::Shader("shaders/raytracer.comp");
 
-	// Terrain
+	// Terrain and map population
 	m_terrain = new ab::Terrain();
 	m_terrain->generate(256, 256);
+
+	map = new Map();
+	map->populate(m_terrain->heightMap);
 
 	// This is temp stuff for testing
 	//for (int y = 0; y < 256; ++y)
 	//{
 	//	for (int x = 0; x < 256; ++x)
 	//	{
-	//		m_cube.instancingPositions.push_back(glm::translate(glm::mat4(1.0f), m_terrain->m_boxes[y][x].center));
+	//		m_cube.instancingPositions.push_back(glm::translate(glm::mat4(1.0f), m_terrain->heightMap[y][x]));
 	//		m_voxelPositions.push_back(glm::vec4(m_terrain->m_boxes[y][x].center, 1.0)); // SSBO pads vec3 to vec4 under std430
 	//	}
 	//}
 
-	m_voxelOctree = new Octree<bool>(256); // Create octree of size 256 x 256 x 256
-	m_voxelOctree->setEmptyValue(false); // Set empty node values to false
-
-	// Populate octree
-	for (int y = 0; y < 256; ++y)
-	{
-		for (int x = 0; x < 256; ++x)
-		{
-			int boxY = m_terrain->m_boxes[y][x].center.y;
-			m_voxelOctree->set(x, boxY, y, true);
-		}
-	}
-
-	// Copy octree contents to arrays for shader usage (functional but used for testing too)
 	for (int z = 0; z < 256; ++z)
 	{
-		for (int y = 0; y < 256; ++y)
+		for (int y = 0; y < 128; ++y)
 		{
 			for (int x = 0; x < 256; ++x)
 			{
-				if (m_voxelOctree->at(x, y, z) == true)
+				if (map->voxel(x, y, z) == true)
 				{
 					m_cube.instancingPositions.push_back(glm::translate(glm::mat4(1.0f), glm::vec3(x, y, z)));
-					m_voxelPositions.push_back(glm::vec4(x, y, z, 1.0)); // SSBO pads vec3 to vec4 under std430
-				}				
+				}
 			}
 		}
 	}
+
+
+
+
+
+	//m_voxelOctree = new Octree<bool>(64); // Create octree of size 256 x 256 x 256
+	//m_voxelOctree->setEmptyValue(false); // Set empty node values to false
+
+	//// Populate octree
+	//for (int y = 0; y < 64; ++y)
+	//{
+	//	for (int x = 0; x < 64; ++x)
+	//	{
+	//		int boxY = m_terrain->m_boxes[y][x].center.y;
+	//		m_voxelOctree->set(x, boxY, y, true);
+	//	}
+	//}
+
+	//// Copy octree contents to arrays for shader usage (functional but used for testing too)
+	//for (int z = 0; z < 64; ++z)
+	//{
+	//	for (int y = 0; y < 64; ++y)
+	//	{
+	//		for (int x = 0; x < 64; ++x)
+	//		{
+	//			if (m_voxelOctree->at(x, y, z) == true)
+	//			{
+	//				m_cube.instancingPositions.push_back(glm::translate(glm::mat4(1.0f), glm::vec3(x, y, z)));
+	//				// m_voxelPositions.push_back(glm::vec4(x, y, z, 1.0)); // SSBO pads vec3 to vec4 under std430
+	//			}				
+	//		}
+	//	}
+	//}
 
 	// Test model
 	ab::OpenGL::import("models/generic-block.obj", m_cube, "models/grass-block.png");
@@ -241,49 +262,30 @@ void Game::processEvents()
 			m_mousePos.y = 1.0f - (2.0f * f_event.motion.y) / SCREEN_HEIGHT;
 		}
 
-		// When left mouse button is clicked, cast a ray from the current cursor position
-		if (f_event.type == SDL_MOUSEBUTTONDOWN) // This is crap
+		// Handle left and right mouse button clicks
+		if (f_event.type == SDL_MOUSEBUTTONDOWN)
 		{
-			if (f_event.button.button == SDL_BUTTON_LEFT) // Yeah, button.button, it's legit
+			int x, y, z;
+
+			if (f_event.button.button == SDL_BUTTON_LEFT) // Add voxel
 			{
-				//m_camera->getEyeRay(m_mousePos.x, m_mousePos.y, m_rayDirection);
-
-				//if (checkAllCubesIntersect(m_camera->getEye(), m_rayDirection, m_hitInfo))
-				//{
-				//	auto itr_1 = m_cube.instancingPositions.begin() + m_hitInfo.m_bi;
-				//	m_cube.instancingPositions.erase(itr_1);
-				//	auto itr_2 = m_voxelPositions.begin() + m_hitInfo.m_bi;
-				//	m_voxelPositions.erase(itr_2);
-
-				//	m_instanceArrayUpdated = true;
-				//}
-
-
 				m_rayDirection = m_camera->getRayFromMousePos(m_mousePos.x, m_mousePos.y);
 				int index;
 
-				if (intersectAllCubes(m_camera->getEye(), m_rayDirection, index, m_hitPoint))
+				if (intersectAllCubes(m_camera->getEye(), m_rayDirection, x, y, z, m_hitPoint))
 				{
-					auto itr_1 = m_cube.instancingPositions.begin() + index;
-					m_cube.instancingPositions.erase(itr_1);
-					auto itr_2 = m_voxelPositions.begin() + index;
-					m_voxelPositions.erase(itr_2);
-					
 					m_instanceArrayUpdated = true;
 				}
 			}
-			else if (f_event.button.button == SDL_BUTTON_RIGHT)
+			else if (f_event.button.button == SDL_BUTTON_RIGHT) // Delete voxel
 			{
-				m_camera->getEyeRay(m_mousePos.x, m_mousePos.y, m_rayDirection);
+				m_rayDirection = m_camera->getRayFromMousePos(m_mousePos.x, m_mousePos.y);
+				int index;
 
-				if (checkAllCubesIntersect(m_camera->getEye(), m_rayDirection, m_hitInfo))
+				if (intersectAllCubes(m_camera->getEye(), m_rayDirection, x, y, z, m_hitPoint))
 				{
-					//auto itr_1 = m_cube.instancingPositions.begin() + m_hitInfo.m_bi;
-					//m_cube.instancingPositions.erase(itr_1);
-					//auto itr_2 = m_voxelPositions.begin() + m_hitInfo.m_bi;
-					//m_voxelPositions.erase(itr_2);
-
-					//m_instanceArrayUpdated = true;
+					//m_voxelOctree->set(x, y, z, false);
+					m_instanceArrayUpdated = true;
 				}
 			}
 		}
@@ -427,6 +429,28 @@ void Game::draw()
 		// If the instance array has changed then update it
 		if (m_instanceArrayUpdated)
 		{
+			// Clear array
+			if (m_cube.instancingPositions.size() > 0)
+			{
+				m_cube.instancingPositions.clear();
+			}
+
+			// Copy octree contents to arrays for shader usage (functional but used for testing too)
+			//for (int z = 0; z < 64; ++z)
+			//{
+			//	for (int y = 0; y < 64; ++y)
+			//	{
+			//		for (int x = 0; x < 64; ++x)
+			//		{
+			//			if (m_voxelOctree->at(x, y, z) == true)
+			//			{
+			//				m_cube.instancingPositions.push_back(glm::translate(glm::mat4(1.0f), glm::vec3(x, y, z)));
+			//				// m_voxelPositions.push_back(glm::vec4(x, y, z, 1.0)); // SSBO pads vec3 to vec4 under std430
+			//			}
+			//		}
+			//	}
+			//}
+
 			glBindBuffer(GL_ARRAY_BUFFER, m_cube.instanceBufferID);
 			glBufferSubData(GL_ARRAY_BUFFER, 0, m_cube.instancingPositions.size() * sizeof(glm::mat4), &m_cube.instancingPositions[0]);
 
@@ -471,8 +495,8 @@ void Game::initialiseRaytracing()
 
 	// Copy voxel positions to GPU
 	glGenBuffers(1, &m_voxelPositions_SSBO);
-	glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_voxelPositions_SSBO);
-	glBufferData(GL_SHADER_STORAGE_BUFFER, m_voxelPositions.size() * sizeof(glm::vec4), &m_voxelPositions[0], GL_DYNAMIC_COPY);
+	//glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_voxelPositions_SSBO);
+	//glBufferData(GL_SHADER_STORAGE_BUFFER, m_voxelPositions.size() * sizeof(glm::vec4), &m_voxelPositions[0], GL_DYNAMIC_COPY);
 	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, m_voxelPositions_SSBO);
 	glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 
@@ -506,7 +530,8 @@ void Game::raytrace()
 
 	// Voxel buffer object
 	glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_voxelPositions_SSBO);
-	glBufferData(GL_SHADER_STORAGE_BUFFER, m_voxelPositions.size() * sizeof(glm::vec3), &m_voxelPositions[0], GL_READ_ONLY);
+	//glBufferData(GL_SHADER_STORAGE_BUFFER, m_voxelPositions.size() * sizeof(glm::vec3), &m_voxelPositions[0], GL_READ_ONLY);
+	//glBufferData(GL_SHADER_STORAGE_BUFFER, m_voxelOctree->size() * sizeof(glm::vec3), &m_voxelOctree[0], GL_READ_ONLY);
 
 	// Compute appropriate invocation dimension
 	int f_worksizeX = ab::OpenGL::nextPowerOfTwo(1280);
@@ -584,19 +609,19 @@ bool Game::checkAllCubesIntersect(glm::vec3 t_origin, glm::vec3 t_direction, Hit
 	float f_smallest = m_cube.instancingPositions.size();
 	bool f_found = false;
 
-	for (int i = 0; i < m_voxelPositions.size(); i++)
-	{
-		glm::vec2 f_lambda = intersectCube(t_origin, t_direction, m_voxelPositions[i]);
+	//for (int i = 0; i < m_voxelPositions.size(); i++)
+	//{
+	//	glm::vec2 f_lambda = intersectCube(t_origin, t_direction, m_voxelPositions[i]);
 
-		if (f_lambda.x > 0.0 && f_lambda.x < f_lambda.y && f_lambda.x < f_smallest)
-		{
-			t_hitInfo.m_lambda = f_lambda;
-			t_hitInfo.m_bi = i;
-			f_smallest = f_lambda.x;
-			m_selectedCube = m_voxelPositions[i];
-			f_found = true;			
-		}
-	}
+	//	if (f_lambda.x > 0.0 && f_lambda.x < f_lambda.y && f_lambda.x < f_smallest)
+	//	{
+	//		t_hitInfo.m_lambda = f_lambda;
+	//		t_hitInfo.m_bi = i;
+	//		f_smallest = f_lambda.x;
+	//		m_selectedCube = m_voxelPositions[i];
+	//		f_found = true;			
+	//	}
+	//}
 
 	return f_found;
 }

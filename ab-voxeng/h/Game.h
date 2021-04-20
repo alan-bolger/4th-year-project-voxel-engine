@@ -29,6 +29,7 @@
 #include "Terrain.h"
 #include "Debug.h"
 #include "Octree.h"
+#include "Map.h"
 
 class Ray
 {
@@ -88,7 +89,8 @@ private:
 	int m_comboType = 0;
 	bool m_raytracingOn = false;
 	bool m_instanceArrayUpdated = false;
-	Octree<bool> *m_voxelOctree;
+	Map *map;
+	//Octree<bool> *m_voxelOctree;
 
 	// Quad for render to texture
 	GLuint m_quadVertexArrayObjectID;
@@ -125,11 +127,11 @@ private:
 	glm::vec2 intersectCube(glm::vec3 t_origin, glm::vec3 t_direction, glm::vec4 t_cubeCenter);
 	bool checkAllCubesIntersect(glm::vec3 t_origin, glm::vec3 t_direction, HitInfo &t_hitInfo);
 
-	bool intersect(const Ray &r, float &t, glm::vec4 t_cubeCenter) const
+	bool intersect(const Ray &r, float &t, int x, int y, int z) const
 	{
 		glm::vec3 bounds[2];
 		glm::vec3 f_cubeSize(0.5, 0.5, 0.5);
-		glm::vec3 f_cubeCenter = glm::vec3(t_cubeCenter.x, t_cubeCenter.y, t_cubeCenter.z);
+		glm::vec3 f_cubeCenter = glm::vec3(x, y, z);
 
 		bounds[0] = f_cubeCenter - f_cubeSize;
 		bounds[1] = f_cubeCenter + f_cubeSize;
@@ -169,21 +171,45 @@ private:
 
 		return true;
 	}
-
-	bool intersectAllCubes(glm::vec3 t_origin, glm::vec3 t_direction, int &t_index, glm::vec3 &t_hitPoint)
+	
+	bool intersectAllCubes(glm::vec3 t_origin, glm::vec3 t_direction, int &t_x, int &t_y, int &t_z, glm::vec3 &t_hitPoint)
 	{
 		Ray ray(t_origin, t_direction);
 		float t;
 
-		for (int i = 0; i < m_voxelPositions.size(); i++)
-		{
-			if (intersect(ray, t, m_voxelPositions[i]))
-			{
-				t_index = i;
-				m_hitPoint = ray.orig + ray.dir * t;
-				return true;
-			}
-		}
+		//for (int i = 0; i < m_voxelPositions.size(); i++)
+		//{
+		//	if (intersect(ray, t, m_voxelPositions[i]))
+		//	{
+		//		t_index = i;
+		//		m_hitPoint = ray.orig + ray.dir * t;
+		//		return true;
+		//	}
+		//}
+
+		//for (int z = 0; z < 256; ++z)
+		//{
+		//	for (int y = 0; y < 256; ++y)
+		//	{
+		//		for (int x = 0; x < 256; ++x)
+		//		{
+		//			if (m_voxelPositions->at(x, y, z) == false)
+		//			{
+		//				break;
+		//			}
+
+		//			if (intersect(ray, t, x, y, z))
+		//			{
+		//				m_hitPoint = ray.orig + ray.dir * t;
+		//				t_x = x;
+		//				t_y = y;
+		//				t_z = z;
+
+		//				return true;
+		//			}
+		//		}
+		//	}
+		//}
 
 		return false;
 	}

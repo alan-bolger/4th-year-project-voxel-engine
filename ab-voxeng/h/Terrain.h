@@ -26,7 +26,8 @@ namespace ab
 	public:
 		static const int MAP_WIDTH = 256;
 		static const int MAP_HEIGHT = 256;
-		Box m_boxes[MAP_HEIGHT][MAP_WIDTH];
+		// Box m_boxes[MAP_HEIGHT][MAP_WIDTH];
+		int heightMap[MAP_WIDTH][MAP_HEIGHT];
 
 		Terrain();
 		~Terrain();

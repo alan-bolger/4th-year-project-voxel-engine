@@ -19,8 +19,8 @@
     <Filter Include="ImGUI">
       <UniqueIdentifier>{9cdec935-d2c5-4ef4-adec-28d72da3cb24}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Octree">
-      <UniqueIdentifier>{fc08d3cc-b482-4169-8488-58b3915578a5}</UniqueIdentifier>
+    <Filter Include="Header Files\Map System">
+      <UniqueIdentifier>{062f2f2c-fbde-4663-be11-9912e21d9b52}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -115,6 +115,18 @@
     </ClInclude>
     <ClInclude Include="h\Globals.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="h\Bit.h">
+      <Filter>Header Files\Map System</Filter>
+    </ClInclude>
+    <ClInclude Include="h\Map.h">
+      <Filter>Header Files\Map System</Filter>
+    </ClInclude>
+    <ClInclude Include="h\Voxel.h">
+      <Filter>Header Files\Map System</Filter>
+    </ClInclude>
+    <ClInclude Include="h\Chunk.h">
+      <Filter>Header Files\Map System</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

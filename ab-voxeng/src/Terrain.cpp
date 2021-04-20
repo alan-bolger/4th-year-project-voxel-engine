@@ -114,9 +114,7 @@ void ab::Terrain::generate(int t_width, int t_height)
 		{
 			float f_arrVal = f_elevationMap[z][x];
 			f_yValue = m_noise->normaliseToRange(f_arrVal, f_min, f_max) * 63.0f;
-
-			m_boxes[z][x].center = glm::vec3(int(x), int(f_yValue), int(z));
-			m_boxes[z][x].colour = glm::vec3(0.0, 0.0, 1.0);
+			heightMap[x][z] = int(f_yValue);
 		}
 	}
 }
