@@ -5,50 +5,74 @@
 #ifndef CHUNK_H
 #define CHUNK_H
 
-#include "Bit.h"
+#include "Voxel.h"
 
 class Chunk
 {
 public:
 	Chunk()
 	{
-		int X = 4;
-		int Y = 4;
-		int Z = 4;
+		int X = 16;
+		int Y = 16;
+		int Z = 16;
 
-		bits = new Bit **[64];
+		voxels = new Voxel **[4096];
 
 		for (int i = 0; i < X; i++)
 		{
-			bits[i] = new Bit * [Y];
+			voxels[i] = new Voxel * [Y];
 
 			for (int j = 0; j < Y; j++)
 			{
-				bits[i][j] = new Bit[Z];
+				voxels[i][j] = new Voxel[Z];
 			}
 		}
 	};
 
 	~Chunk()
 	{
-		int X = 4;
-		int Y = 4;
-		int Z = 4;
+		int X = 16;
+		int Y = 16;
+		int Z = 16;
 
 		for (int i = 0; i < X; i++)
 		{
 			for (int j = 0; j < Y; j++)
 			{
-				delete[] bits[i][j];
+				delete[] voxels[i][j];
 			}
 
-			delete[] bits[i];
+			delete[] voxels[i];
 		}
 
-		delete[] bits;
+		delete[] voxels;
 	};
 
-	Bit ***bits;
+	/// <summary>
+	/// Checks the chunk to see if it's empty.
+	/// If it's empty then the chunk flag is set to true.
+	/// </summary>
+	void check()
+	{
+		empty = true;
+
+		for (int z = 0; z < 16; ++z)
+		{
+			for (int y = 0; y < 16; ++y)
+			{
+				for (int x = 0; x < 16; ++x)
+				{
+					if (voxels[x][y][z].exists)
+					{
+						empty = false;
+						return;
+					}
+				}
+			}
+		}
+	};
+
+	Voxel ***voxels;
 	bool empty = true;
 };
 

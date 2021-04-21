@@ -152,67 +152,46 @@ void Game::initialise()
 
 	// Terrain and map population
 	m_terrain = new ab::Terrain();
-	m_terrain->generate(256, 256);
+	m_terrain->generate(MAP_WIDTH, MAP_HEIGHT);
 
 	map = new Map();
 	map->populate(m_terrain->heightMap);
 
-	// This is temp stuff for testing
-	//for (int y = 0; y < 256; ++y)
-	//{
-	//	for (int x = 0; x < 256; ++x)
-	//	{
-	//		m_cube.instancingPositions.push_back(glm::translate(glm::mat4(1.0f), m_terrain->heightMap[y][x]));
-	//		m_voxelPositions.push_back(glm::vec4(m_terrain->m_boxes[y][x].center, 1.0)); // SSBO pads vec3 to vec4 under std430
-	//	}
-	//}
+	int map_w = MAP_WIDTH / 16;
+	int map_h = MAP_HEIGHT / 16;	
+	int map_d = MAP_DEPTH / 16;
 
-	for (int z = 0; z < 256; ++z)
+	// TODO: Move this into Map class
+	for (int z = 0; z < map_d; ++z)
 	{
-		for (int y = 0; y < 128; ++y)
+		for (int y = 0; y < map_h; ++y)
 		{
-			for (int x = 0; x < 256; ++x)
+			for (int x = 0; x < map_w; ++x)
 			{
-				if (map->voxel(x, y, z) == true)
+				if (map->chunks[x][y][z].empty)
 				{
-					m_cube.instancingPositions.push_back(glm::translate(glm::mat4(1.0f), glm::vec3(x, y, z)));
+					continue;
+				}
+				else
+				{
+					for (int vZ = 0; vZ < 16; ++vZ)
+					{
+						for (int vY = 0; vY < 16; ++vY)
+						{
+							for (int vX = 0; vX < 16; ++vX)
+							{
+								if (map->chunks[x][y][z].voxels[vX][vY][vZ].exists)
+								{
+									// TODO:: Split instancing positions into sections attached to each chunk
+									m_cube.instancingPositions.push_back(glm::translate(glm::mat4(1.0f), glm::vec3(x * 16 + vX, y * 16 + vY, z * 16 + vZ)));
+								}
+							}
+						}
+					}
 				}
 			}
-		}
+		}		
 	}
-
-
-
-
-
-	//m_voxelOctree = new Octree<bool>(64); // Create octree of size 256 x 256 x 256
-	//m_voxelOctree->setEmptyValue(false); // Set empty node values to false
-
-	//// Populate octree
-	//for (int y = 0; y < 64; ++y)
-	//{
-	//	for (int x = 0; x < 64; ++x)
-	//	{
-	//		int boxY = m_terrain->m_boxes[y][x].center.y;
-	//		m_voxelOctree->set(x, boxY, y, true);
-	//	}
-	//}
-
-	//// Copy octree contents to arrays for shader usage (functional but used for testing too)
-	//for (int z = 0; z < 64; ++z)
-	//{
-	//	for (int y = 0; y < 64; ++y)
-	//	{
-	//		for (int x = 0; x < 64; ++x)
-	//		{
-	//			if (m_voxelOctree->at(x, y, z) == true)
-	//			{
-	//				m_cube.instancingPositions.push_back(glm::translate(glm::mat4(1.0f), glm::vec3(x, y, z)));
-	//				// m_voxelPositions.push_back(glm::vec4(x, y, z, 1.0)); // SSBO pads vec3 to vec4 under std430
-	//			}				
-	//		}
-	//	}
-	//}
 
 	// Test model
 	ab::OpenGL::import("models/generic-block.obj", m_cube, "models/grass-block.png");

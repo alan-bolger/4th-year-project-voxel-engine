@@ -8,6 +8,7 @@
 #include "glm/glm.hpp"
 #include "glm/gtc/matrix_transform.hpp"
 #include "Noise.h"
+#include "Globals.h"
 
 #include <math.h>
 #include <vector>
@@ -24,8 +25,8 @@ namespace ab
 	class Terrain
 	{
 	public:
-		static const int MAP_WIDTH = 256;
-		static const int MAP_HEIGHT = 256;
+		//static const int MAP_WIDTH = 256;
+		//static const int MAP_HEIGHT = 256;
 		// Box m_boxes[MAP_HEIGHT][MAP_WIDTH];
 		int heightMap[MAP_WIDTH][MAP_HEIGHT];
 

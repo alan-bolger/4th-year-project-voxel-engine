@@ -38,7 +38,6 @@
     <ClCompile Include="src\XboxOneController.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="h\Bit.h" />
     <ClInclude Include="h\Camera.h" />
     <ClInclude Include="h\Chunk.h" />
     <ClInclude Include="h\Clock.h" />
@@ -190,6 +189,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>$(ProjectDir)\sdl2\include;$(ProjectDir)\sdl2_image\include;$(ProjectDir)\sdl2_ttf\include;$(ProjectDir)\libs;$(ProjectDir)\libs\imgui\backends;$(ProjectDir)\libs\imgui;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>

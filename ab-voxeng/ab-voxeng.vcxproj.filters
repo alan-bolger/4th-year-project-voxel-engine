@@ -116,9 +116,6 @@
     <ClInclude Include="h\Globals.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="h\Bit.h">
-      <Filter>Header Files\Map System</Filter>
-    </ClInclude>
     <ClInclude Include="h\Map.h">
       <Filter>Header Files\Map System</Filter>
     </ClInclude>
