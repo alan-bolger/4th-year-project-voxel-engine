@@ -75,6 +75,7 @@ private:
 	ab::Shader *m_mainShader;
 	ab::Shader *m_renderQuadShader;
 	ab::Shader *m_computeShader;
+	ab::Shader *m_skyboxShader;
 	ab::Terrain *m_terrain;
 	ab::Model m_cube;
 	ab::Model m_waterBlock;
@@ -97,6 +98,55 @@ private:
 	// Quad for render to texture
 	GLuint m_quadVertexArrayObjectID;
 	GLuint m_quadVertexBufferObjectID;
+
+	// Used for skybox
+	GLuint m_cubeMapTextureID;
+	GLuint m_skyboxVAO;
+	GLuint m_skyboxVBO;
+	float skyboxVertices[108] = // These vertices are used for the skybox cubemap
+	{
+		-1.0f,  1.0f, -1.0f,
+		-1.0f, -1.0f, -1.0f,
+		 1.0f, -1.0f, -1.0f,
+		 1.0f, -1.0f, -1.0f,
+		 1.0f,  1.0f, -1.0f,
+		-1.0f,  1.0f, -1.0f,
+
+		-1.0f, -1.0f,  1.0f,
+		-1.0f, -1.0f, -1.0f,
+		-1.0f,  1.0f, -1.0f,
+		-1.0f,  1.0f, -1.0f,
+		-1.0f,  1.0f,  1.0f,
+		-1.0f, -1.0f,  1.0f,
+
+		 1.0f, -1.0f, -1.0f,
+		 1.0f, -1.0f,  1.0f,
+		 1.0f,  1.0f,  1.0f,
+		 1.0f,  1.0f,  1.0f,
+		 1.0f,  1.0f, -1.0f,
+		 1.0f, -1.0f, -1.0f,
+
+		-1.0f, -1.0f,  1.0f,
+		-1.0f,  1.0f,  1.0f,
+		 1.0f,  1.0f,  1.0f,
+		 1.0f,  1.0f,  1.0f,
+		 1.0f, -1.0f,  1.0f,
+		-1.0f, -1.0f,  1.0f,
+
+		-1.0f,  1.0f, -1.0f,
+		 1.0f,  1.0f, -1.0f,
+		 1.0f,  1.0f,  1.0f,
+		 1.0f,  1.0f,  1.0f,
+		-1.0f,  1.0f,  1.0f,
+		-1.0f,  1.0f, -1.0f,
+
+		-1.0f, -1.0f, -1.0f,
+		-1.0f, -1.0f,  1.0f,
+		 1.0f, -1.0f, -1.0f,
+		 1.0f, -1.0f, -1.0f,
+		-1.0f, -1.0f,  1.0f,
+		 1.0f, -1.0f,  1.0f
+	};
 
 	// These vertices are used to draw a quad
 	// The quad is used for rendering to a texture
