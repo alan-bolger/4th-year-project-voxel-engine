@@ -168,6 +168,51 @@ GLuint ab::OpenGL::createFBO(GLsizei t_width, GLsizei t_height)
 }
 
 /// <summary>
+/// Loads a cube map and assigns a texture ID.
+/// Cube map always uses GL_TEXTURE11
+/// </summary>
+/// <param name="t_faces">An array of images to display on the cube.</param>
+/// <param name="t_textureID">The active texture.</param>
+/// <returns>The assigned ID.</returns>
+GLuint ab::OpenGL::loadSkyBoxCubeMap(std::vector<std::string> &t_faces)
+{
+	GLuint f_textureID;
+	glGenTextures(1, &f_textureID);
+	glActiveTexture(GL_TEXTURE11);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, f_textureID);
+
+	int f_width;
+	int f_height;
+	int f_compCount;
+
+	for (unsigned int i = 0; i < t_faces.size(); i++)
+	{
+		unsigned char* f_data = stbi_load(t_faces[i].c_str(), &f_width, &f_height, &f_compCount, 0);
+
+		if (f_data)
+		{
+			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, f_width, f_height, 0, GL_RGB, GL_UNSIGNED_BYTE, f_data);
+			stbi_image_free(f_data);
+		}
+		else
+		{
+			std::cout << "Cubemap texture failed to load at path: " << t_faces[i] << std::endl;
+			stbi_image_free(f_data);
+		}
+	}
+
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+
+	glActiveTexture(GL_TEXTURE0);
+
+	return f_textureID;
+}
+
+/// <summary>
 /// Next power of two utility function.
 /// </summary>
 /// <param name="t_x">Function uses this number as input.</param>

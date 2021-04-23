@@ -29,6 +29,7 @@ Game::~Game()
 	delete m_mainShader;
 	delete m_renderQuadShader;
 	delete m_computeShader;
+	delete m_skyboxShader;
 	delete m_terrain;
 	//delete m_voxelOctree;
 
@@ -149,6 +150,7 @@ void Game::initialise()
 	m_mainShader = new ab::Shader("shaders/passthrough.vert", "shaders/passthrough.frag");
 	m_renderQuadShader = new ab::Shader("shaders/renderquad.vert", "shaders/renderquad.frag");
 	m_computeShader = new ab::Shader("shaders/raytracer.comp");
+	m_skyboxShader = new ab::Shader("shaders/skybox.vert", "shaders/skybox.frag");
 
 	// Terrain and map population
 	m_terrain = new ab::Terrain();
@@ -218,11 +220,31 @@ void Game::initialise()
 	ab::OpenGL::import("models/generic-block.obj", m_cube, "models/grass-block.png");
 	ab::OpenGL::import("models/generic-block.obj", m_waterBlock, "models/water-block.png");
 
-	// m_cube.matrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
+	// Load cube map for skybox
+	std::vector<std::string> f_faces
+	{
+		"models/alpha_island/alpha_island_rt.tga",
+		"models/alpha_island/alpha_island_lf.tga",
+		"models/alpha_island/alpha_island_up.tga",
+		"models/alpha_island/alpha_island_dn.tga",
+		"models/alpha_island/alpha_island_bk.tga",
+		"models/alpha_island/alpha_island_ft.tga"
+	};
+
+	m_cubeMapTextureID = ab::OpenGL::loadSkyBoxCubeMap(f_faces);
 
 	// Raytracing stuff
 	m_FBOtextureID = ab::OpenGL::createFBO(1280, 720);
 	initialiseRaytracing();
+
+	// Bind skybox VAO
+	glGenVertexArrays(1, &m_skyboxVAO);
+	glGenBuffers(1, &m_skyboxVBO);
+	glBindVertexArray(m_skyboxVAO);
+	glBindBuffer(GL_ARRAY_BUFFER, m_skyboxVBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(skyboxVertices), &skyboxVertices, GL_STATIC_DRAW);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
 
 	// Bind quad VAO (this quad is used to render textures on)
 	glGenVertexArrays(1, &m_quadVertexArrayObjectID);
@@ -437,22 +459,6 @@ void Game::draw()
 				m_cube.instancingPositions.clear();
 			}
 
-			// Copy octree contents to arrays for shader usage (functional but used for testing too)
-			//for (int z = 0; z < 64; ++z)
-			//{
-			//	for (int y = 0; y < 64; ++y)
-			//	{
-			//		for (int x = 0; x < 64; ++x)
-			//		{
-			//			if (m_voxelOctree->at(x, y, z) == true)
-			//			{
-			//				m_cube.instancingPositions.push_back(glm::translate(glm::mat4(1.0f), glm::vec3(x, y, z)));
-			//				// m_voxelPositions.push_back(glm::vec4(x, y, z, 1.0)); // SSBO pads vec3 to vec4 under std430
-			//			}
-			//		}
-			//	}
-			//}
-
 			glBindBuffer(GL_ARRAY_BUFFER, m_cube.instanceBufferID);
 			glBufferSubData(GL_ARRAY_BUFFER, 0, m_cube.instancingPositions.size() * sizeof(glm::mat4), &m_cube.instancingPositions[0]);
 
@@ -464,6 +470,30 @@ void Game::draw()
 		ab::OpenGL::uniform3f(*m_mainShader, "viewPosition", m_camera->getEye().x, m_camera->getEye().y, m_camera->getEye().z);
 		ab::OpenGL::draw(m_cube, m_mainShader, "diffuseTexture");
 		ab::OpenGL::draw(m_waterBlock, m_mainShader, "diffuseTexture");
+
+		if (true)
+		{
+			glDepthFunc(GL_LEQUAL);
+
+			// Activate shader
+			glUseProgram(m_skyboxShader->m_programID);
+
+			// Bind texture
+			glBindTexture(GL_TEXTURE_CUBE_MAP, m_cubeMapTextureID);
+			glUniform1i(glGetUniformLocation(m_skyboxShader->m_programID, "skyboxTexture"), 11);
+
+			// Set uniforms
+			glm::mat4 f_skyboxViewMatrix = glm::mat4(glm::mat3(m_camera->getView()));
+			ab::OpenGL::uniformMatrix4fv(*m_skyboxShader, "view", &f_skyboxViewMatrix[0][0]);
+			ab::OpenGL::uniformMatrix4fv(*m_skyboxShader, "projection", &m_camera->getProjection()[0][0]);
+
+			// Bind VAO and draw
+			glBindVertexArray(m_skyboxVAO);
+			glDrawArrays(GL_TRIANGLES, 0, 36);
+			glBindVertexArray(0);
+
+			glDepthFunc(GL_LESS);
+		}
 	}
 	else
 	{

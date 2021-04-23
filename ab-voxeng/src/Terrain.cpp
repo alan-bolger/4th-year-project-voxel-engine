@@ -118,6 +118,4 @@ void ab::Terrain::generate(int t_width, int t_height)
 			waterMap[x][z] = f_waterHeight;
 		}
 	}
-
-	return;
 }

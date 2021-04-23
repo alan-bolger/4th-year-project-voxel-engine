@@ -20,7 +20,8 @@ namespace ab
 		static void import(const char *t_modelFilename, ab::Model &t_model, std::string t_diffuseTextureFilename = "");
 		static void draw(ab::Model &t_model, Shader *t_shader, std::string t_uniformName = "");
 		static GLuint createFBO(GLsizei t_width, GLsizei t_height);
-		static int nextPowerOfTwo(int x);
+		static GLuint loadSkyBoxCubeMap(std::vector<std::string> &t_faces);
+		static int nextPowerOfTwo(int x);		
 
 		static void uniform1f(Shader &t_shader, std::string t_uniformName, float t_float);
 		static void uniform2f(Shader &t_shader, std::string t_uniformName, float t_float_1, float t_float_2);
