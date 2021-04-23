@@ -51,6 +51,7 @@ public:
 
 	/// <summary>
 	/// Set a voxel to visible or not visible.
+	/// Change this to a colour value
 	/// </summary>
 	/// <param name="x">The voxel's world position x value.</param>
 	/// <param name="y">The voxel's world position y value.</param>
@@ -107,9 +108,9 @@ public:
 	/// Populates the map with voxels.
 	/// </summary>
 	/// <param name="heightMap">An array of height map values.</param>
-	void populate(int heightMap[MAP_HEIGHT][MAP_WIDTH])
+	void populate(int heightMap[MAP_WIDTH][MAP_DEPTH])
 	{
-		for (int y = 0; y < MAP_HEIGHT; ++y)
+		for (int y = 0; y < MAP_DEPTH; ++y)
 		{
 			for (int x = 0; x < MAP_WIDTH; ++x)
 			{
