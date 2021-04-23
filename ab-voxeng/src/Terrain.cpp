@@ -66,7 +66,7 @@ void ab::Terrain::generate(int t_width, int t_height)
 			e /= (1.00 + 0.50 + 0.25 + 0.13 + 0.06 + 0.03);
 			e = (1 + e - distance) / 2;
 			e = pow(e, 4.0);
-			f_elevationMap[y][x] = e;
+			f_elevationMap[x][y] = e;
 		}
 	}
 
@@ -90,7 +90,7 @@ void ab::Terrain::generate(int t_width, int t_height)
 	{
 		for (int x = 0; x < t_width; ++x)
 		{
-			float f_yValue = (f_elevationMap[z][x]);
+			float f_yValue = (f_elevationMap[x][z]);
 
 			// Set min and max values from array
 			if (f_yValue > f_max)
@@ -105,16 +105,19 @@ void ab::Terrain::generate(int t_width, int t_height)
 	}
 
 	float f_yValue = 0.0f;
-	float f_waterHeight = 18.0f;
+	float f_waterHeight = 6.0f;
 
 	// Second pass of array to normalise values using MIN and MAX
 	for (int z = 0; z < t_height; ++z)
 	{
 		for (int x = 0; x < t_width; ++x)
 		{
-			float f_arrVal = f_elevationMap[z][x];
+			float f_arrVal = f_elevationMap[x][z];
 			f_yValue = m_noise->normaliseToRange(f_arrVal, f_min, f_max) * 63.0f;
 			heightMap[x][z] = int(f_yValue);
+			waterMap[x][z] = f_waterHeight;
 		}
 	}
+
+	return;
 }

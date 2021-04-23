@@ -152,27 +152,26 @@ void Game::initialise()
 
 	// Terrain and map population
 	m_terrain = new ab::Terrain();
-	m_terrain->generate(MAP_WIDTH, MAP_HEIGHT);
+	m_terrain->generate(MAP_WIDTH, MAP_DEPTH);
 
 	map = new Map();
 	map->populate(m_terrain->heightMap);
+
+	water = new Map();
+	water->populate(m_terrain->waterMap);
 
 	int map_w = MAP_WIDTH / 16;
 	int map_h = MAP_HEIGHT / 16;	
 	int map_d = MAP_DEPTH / 16;
 
-	// TODO: Move this into Map class
+	// TODO: Move this into Map class probably
 	for (int z = 0; z < map_d; ++z)
 	{
 		for (int y = 0; y < map_h; ++y)
 		{
 			for (int x = 0; x < map_w; ++x)
 			{
-				if (map->chunks[x][y][z].empty)
-				{
-					continue;
-				}
-				else
+				if (!map->chunks[x][y][z].empty)
 				{
 					for (int vZ = 0; vZ < 16; ++vZ)
 					{
@@ -189,13 +188,37 @@ void Game::initialise()
 						}
 					}
 				}
+
+				if (water->chunks[x][y][z].empty)
+				{
+					continue;
+				}
+				else
+				{
+					for (int vZ = 0; vZ < 16; ++vZ)
+					{
+						for (int vY = 0; vY < 16; ++vY)
+						{
+							for (int vX = 0; vX < 16; ++vX)
+							{
+								if (water->chunks[x][y][z].voxels[vX][vY][vZ].exists)
+								{
+									// TODO:: Split instancing positions into sections attached to each chunk
+									m_waterBlock.instancingPositions.push_back(glm::translate(glm::mat4(1.0f), glm::vec3(x * 16 + vX, y * 16 + vY, z * 16 + vZ)));
+								}
+							}
+						}
+					}
+				}
 			}
 		}		
 	}
 
-	// Test model
+	// Load models
 	ab::OpenGL::import("models/generic-block.obj", m_cube, "models/grass-block.png");
-	m_cube.matrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
+	ab::OpenGL::import("models/generic-block.obj", m_waterBlock, "models/water-block.png");
+
+	// m_cube.matrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
 
 	// Raytracing stuff
 	m_FBOtextureID = ab::OpenGL::createFBO(1280, 720);
@@ -436,10 +459,11 @@ void Game::draw()
 			m_instanceArrayUpdated = false;
 		}
 
-		// Draw test cube
-		ab::OpenGL::uniformMatrix4fv(*m_mainShader, "model", &m_cube.matrix[0][0]);
+		// Draw voxels
+		//ab::OpenGL::uniformMatrix4fv(*m_mainShader, "model", &m_cube.matrix[0][0]);
 		ab::OpenGL::uniform3f(*m_mainShader, "viewPosition", m_camera->getEye().x, m_camera->getEye().y, m_camera->getEye().z);
 		ab::OpenGL::draw(m_cube, m_mainShader, "diffuseTexture");
+		ab::OpenGL::draw(m_waterBlock, m_mainShader, "diffuseTexture");
 	}
 	else
 	{

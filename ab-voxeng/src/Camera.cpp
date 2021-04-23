@@ -183,7 +183,7 @@ void ab::Camera::update(double t_deltaTime)
 		m_yaw += m_turnSpeed * t_deltaTime;
 		m_rotationMatrix = glm::rotate(glm::mat4(1.0f), glm::radians(-m_turnSpeed * (float)t_deltaTime), glm::vec3(0.f, 1.f, 0.f));
 		m_direction = m_direction * m_rotationMatrix;
-		m_directionStrafe = m_directionStrafe * m_rotationMatrix;
+		//m_directionStrafe = m_directionStrafe * m_rotationMatrix;
 
 		if (m_yaw >= 360.0)
 		{
@@ -197,7 +197,7 @@ void ab::Camera::update(double t_deltaTime)
 		m_yaw -= m_turnSpeed * t_deltaTime;
 		m_rotationMatrix = glm::rotate(glm::mat4(1.0f), glm::radians(m_turnSpeed * (float)t_deltaTime), glm::vec3(0.f, 1.f, 0.f));
 		m_direction = m_direction * m_rotationMatrix;
-		m_directionStrafe = m_directionStrafe * m_rotationMatrix;
+		//m_directionStrafe = m_directionStrafe * m_rotationMatrix;
 
 		if (m_yaw <= -360.0)
 		{

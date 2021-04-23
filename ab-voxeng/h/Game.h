@@ -77,6 +77,7 @@ private:
 	ab::Shader *m_computeShader;
 	ab::Terrain *m_terrain;
 	ab::Model m_cube;
+	ab::Model m_waterBlock;
 	glm::vec3 m_directionalLightDirection = glm::vec3(1, -5, 1);
 	float m_directionalLightAmbient[3] = { 1.f, 1.f, 1.f };
 	float m_directionalLightDiffuse[3] = { 1.f, 1.f, 1.f };
@@ -90,6 +91,7 @@ private:
 	bool m_raytracingOn = false;
 	bool m_instanceArrayUpdated = false;
 	Map *map;
+	Map *water;
 	//Octree<bool> *m_voxelOctree;
 
 	// Quad for render to texture
