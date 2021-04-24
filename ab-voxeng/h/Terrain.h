@@ -30,6 +30,7 @@ namespace ab
 		// Box m_boxes[MAP_HEIGHT][MAP_WIDTH];
 		int heightMap[MAP_WIDTH][MAP_DEPTH];
 		int waterMap[MAP_WIDTH][MAP_DEPTH];
+		int treeMap[MAP_WIDTH][MAP_DEPTH];
 
 		Terrain();
 		~Terrain();
