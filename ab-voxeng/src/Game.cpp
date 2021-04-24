@@ -157,10 +157,13 @@ void Game::initialise()
 	m_terrain->generate(MAP_WIDTH, MAP_DEPTH);
 
 	map = new Map();
-	map->populate(m_terrain->heightMap);
+	map->populate(m_terrain->heightMap, m_terrain->treeMap, m_terrain->waterMap);
 
-	water = new Map();
-	water->populate(m_terrain->waterMap);
+	//water = new Map();
+	//water->populate(m_terrain->waterMap);
+
+	//trees = new Map();
+	//trees->placeScenery(m_terrain->treeMap);
 
 	int map_w = MAP_WIDTH / 16;
 	int map_h = MAP_HEIGHT / 16;	
@@ -173,7 +176,7 @@ void Game::initialise()
 		{
 			for (int x = 0; x < map_w; ++x)
 			{
-				if (!map->chunks[x][y][z].empty)
+				if (!map->chunks[x][y][z].empty) // Don't check empty chunks
 				{
 					for (int vZ = 0; vZ < 16; ++vZ)
 					{
@@ -181,32 +184,22 @@ void Game::initialise()
 						{
 							for (int vX = 0; vX < 16; ++vX)
 							{
-								if (map->chunks[x][y][z].voxels[vX][vY][vZ].exists)
+								if (map->chunks[x][y][z].voxels[vX][vY][vZ] == Voxel::GRASS)
 								{
-									// TODO:: Split instancing positions into sections attached to each chunk
+									// TODO:: Split instancing positions into sections attached to each chunk maybe
 									m_cube.instancingPositions.push_back(glm::translate(glm::mat4(1.0f), glm::vec3(x * 16 + vX, y * 16 + vY, z * 16 + vZ)));
 								}
-							}
-						}
-					}
-				}
-
-				if (water->chunks[x][y][z].empty)
-				{
-					continue;
-				}
-				else
-				{
-					for (int vZ = 0; vZ < 16; ++vZ)
-					{
-						for (int vY = 0; vY < 16; ++vY)
-						{
-							for (int vX = 0; vX < 16; ++vX)
-							{
-								if (water->chunks[x][y][z].voxels[vX][vY][vZ].exists)
+								else if (map->chunks[x][y][z].voxels[vX][vY][vZ] == Voxel::WATER)
 								{
-									// TODO:: Split instancing positions into sections attached to each chunk
 									m_waterBlock.instancingPositions.push_back(glm::translate(glm::mat4(1.0f), glm::vec3(x * 16 + vX, y * 16 + vY, z * 16 + vZ)));
+								}
+								else if (map->chunks[x][y][z].voxels[vX][vY][vZ] == Voxel::TREE)
+								{
+									m_treeBlock.instancingPositions.push_back(glm::translate(glm::mat4(1.0f), glm::vec3(x * 16 + vX, y * 16 + vY, z * 16 + vZ)));
+								}
+								else if (map->chunks[x][y][z].voxels[vX][vY][vZ] == Voxel::LEAF)
+								{
+									m_leafBlock.instancingPositions.push_back(glm::translate(glm::mat4(1.0f), glm::vec3(x * 16 + vX, y * 16 + vY, z * 16 + vZ)));
 								}
 							}
 						}
@@ -216,9 +209,30 @@ void Game::initialise()
 		}		
 	}
 
+	// Confirmation that chunks are empty or contain voxels
+	//for (int z = 0; z < map_d; ++z)
+	//{
+	//	for (int y = 0; y < map_h; ++y)
+	//	{
+	//		for (int x = 0; x < map_w; ++x)
+	//		{
+	//			if (map->chunks[x][y][z].empty)
+	//			{
+	//				std::cout << "Chunk [" << x << "][" << y << "][" << z << "] is empty!" << std::endl;
+	//			}
+	//			else
+	//			{
+	//				std::cout << "Chunk [" << x << "][" << y << "][" << z << "] contains voxels!" << std::endl;
+	//			}
+	//		}
+	//	}
+	//}
+
 	// Load models
 	ab::OpenGL::import("models/generic-block.obj", m_cube, "models/grass-block.png");
 	ab::OpenGL::import("models/generic-block.obj", m_waterBlock, "models/water-block.png");
+	ab::OpenGL::import("models/generic-block.obj", m_treeBlock, "models/tree-block.png");
+	ab::OpenGL::import("models/generic-block.obj", m_leafBlock, "models/leaf-block.png");
 
 	// Load cube map for skybox
 	std::vector<std::string> f_faces
@@ -470,6 +484,8 @@ void Game::draw()
 		ab::OpenGL::uniform3f(*m_mainShader, "viewPosition", m_camera->getEye().x, m_camera->getEye().y, m_camera->getEye().z);
 		ab::OpenGL::draw(m_cube, m_mainShader, "diffuseTexture");
 		ab::OpenGL::draw(m_waterBlock, m_mainShader, "diffuseTexture");
+		ab::OpenGL::draw(m_treeBlock, m_mainShader, "diffuseTexture");
+		ab::OpenGL::draw(m_leafBlock, m_mainShader, "diffuseTexture");
 
 		if (true)
 		{

@@ -1,4 +1,5 @@
 #include "Terrain.h"
+#include <iostream>
 
 /// <summary>
 /// Constructor for the Terrain class.
@@ -105,7 +106,7 @@ void ab::Terrain::generate(int t_width, int t_height)
 	}
 
 	float f_yValue = 0.0f;
-	float f_waterHeight = 6.0f;
+	float f_waterHeight = WATER_HEIGHT;
 
 	// Second pass of array to normalise values using MIN and MAX
 	for (int z = 0; z < t_height; ++z)
@@ -115,7 +116,69 @@ void ab::Terrain::generate(int t_width, int t_height)
 			float f_arrVal = f_elevationMap[x][z];
 			f_yValue = m_noise->normaliseToRange(f_arrVal, f_min, f_max) * 63.0f;
 			heightMap[x][z] = int(f_yValue);
-			waterMap[x][z] = f_waterHeight;
+
+			if (f_arrVal < f_waterHeight)
+			{
+				waterMap[x][z] = f_waterHeight - 1;
+			}
+			else
+			{
+				waterMap[x][z] = 0;
+			}
+			
+			//treeMap[x][z] = int(f_yValue);
+		}
+	}
+
+	// Higher frequency value means higher tree density
+	int R = 8;
+	float freq = 16.0f;
+
+	for (int y = 0; y < t_height; y++)
+	{
+		for (int x = 0; x < t_width; x++)
+		{
+			double nx = x / (double)t_width - 0.5;
+			double ny = y / (double)t_height - 0.5;
+			f_treeMap[x][y] = m_noise->noise(freq * nx, freq * ny);
+		}
+	}
+
+	// Set max value
+	for (int yc = 0; yc < t_height; yc++)
+	{
+		for (int xc = 0; xc < t_width; xc++)
+		{
+			double max = 0;
+
+			for (int yn = yc - R; yn <= yc + R; yn++)
+			{
+				for (int xn = xc - R; xn <= xc + R; xn++)
+				{
+					if (0 <= yn && yn < t_height && 0 <= xn && xn < t_width)
+					{
+						float e = f_treeMap[xn][yn];
+
+						if (e > max)
+						{
+							max = e;
+						}
+					}
+				}
+			}
+
+			// Place a tree is the current value is equal to the max value
+			if (f_treeMap[xc][yc] == max)
+			{
+				if (heightMap[xc][yc] + 1 > f_waterHeight)
+				{
+					treeMap[xc][yc] = heightMap[xc][yc] + 1;
+				}
+			}
+			else
+			{
+				treeMap[xc][yc] = 0;
+			}
 		}
 	}
 }

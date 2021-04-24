@@ -5,9 +5,18 @@
 #ifndef VOXEL_H
 #define VOXEL_H
 
-struct Voxel
+//struct Voxel
+//{
+//	bool exists = false;
+//};
+
+enum class Voxel
 {
-	bool exists = false;
+	AIR,
+	GRASS,
+	WATER,
+	TREE,
+	LEAF
 };
 
 #endif // !VOXEL_H

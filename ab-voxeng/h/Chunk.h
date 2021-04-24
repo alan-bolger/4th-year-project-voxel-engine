@@ -27,6 +27,17 @@ public:
 				voxels[i][j] = new Voxel[Z];
 			}
 		}
+
+		for (int z = 0; z < 16; ++z)
+		{
+			for (int y = 0; y < 16; ++y)
+			{
+				for (int x = 0; x < 16; ++x)
+				{
+					voxels[x][y][z] = Voxel::AIR;
+				}
+			}
+		}
 	};
 
 	~Chunk()
@@ -62,7 +73,7 @@ public:
 			{
 				for (int x = 0; x < 16; ++x)
 				{
-					if (voxels[x][y][z].exists)
+					if (voxels[x][y][z] != Voxel::AIR)
 					{
 						empty = false;
 						return;
