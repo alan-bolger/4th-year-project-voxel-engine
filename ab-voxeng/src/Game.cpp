@@ -546,6 +546,14 @@ void Game::draw()
 	}
 }
 
+int Game::getChunkIndex(int x, int y, int z)
+{
+	int map_h = MAP_HEIGHT / 16;
+	int map_d = MAP_DEPTH / 16;
+
+	return x * map_h * map_d + y * map_d + z;
+}
+
 /// <summary>
 /// Initialises the compute shader.
 /// </summary>

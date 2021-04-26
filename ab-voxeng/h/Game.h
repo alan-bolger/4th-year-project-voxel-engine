@@ -172,6 +172,7 @@ private:
 	void processEvents();
 	void update(double t_deltaTime);
 	void draw();
+	int getChunkIndex(int x, int y, int z);
 	void initialiseRaytracing();
 	void raytrace();
 	void renderTextureToQuad(GLuint &t_textureID);
@@ -180,87 +181,102 @@ private:
 
 	bool intersect(const Ray &r, float &t, int x, int y, int z) const
 	{
-		glm::vec3 bounds[2];
-		glm::vec3 f_cubeSize(0.5, 0.5, 0.5);
-		glm::vec3 f_cubeCenter = glm::vec3(x, y, z);
+		//glm::vec3 bounds[2];
+		//glm::vec3 f_cubeSize(0.5, 0.5, 0.5);
+		//glm::vec3 f_cubeCenter = glm::vec3(x, y, z);
 
-		bounds[0] = f_cubeCenter - f_cubeSize;
-		bounds[1] = f_cubeCenter + f_cubeSize;
+		//bounds[0] = f_cubeCenter - f_cubeSize;
+		//bounds[1] = f_cubeCenter + f_cubeSize;
 
-		float tmin, tmax, tymin, tymax, tzmin, tzmax;
+		//float tmin, tmax, tymin, tymax, tzmin, tzmax;
 
-		tmin = (bounds[r.sign[0]].x - r.orig.x) * r.invdir.x;
-		tmax = (bounds[1 - r.sign[0]].x - r.orig.x) * r.invdir.x;
-		tymin = (bounds[r.sign[1]].y - r.orig.y) * r.invdir.y;
-		tymax = (bounds[1 - r.sign[1]].y - r.orig.y) * r.invdir.y;
+		//tmin = (bounds[r.sign[0]].x - r.orig.x) * r.invdir.x;
+		//tmax = (bounds[1 - r.sign[0]].x - r.orig.x) * r.invdir.x;
+		//tymin = (bounds[r.sign[1]].y - r.orig.y) * r.invdir.y;
+		//tymax = (bounds[1 - r.sign[1]].y - r.orig.y) * r.invdir.y;
 
-		if ((tmin > tymax) || (tymin > tmax))
-			return false;
+		//if ((tmin > tymax) || (tymin > tmax))
+		//	return false;
 
-		if (tymin > tmin)
-			tmin = tymin;
-		if (tymax < tmax)
-			tmax = tymax;
+		//if (tymin > tmin)
+		//	tmin = tymin;
+		//if (tymax < tmax)
+		//	tmax = tymax;
 
-		tzmin = (bounds[r.sign[2]].z - r.orig.z) * r.invdir.z;
-		tzmax = (bounds[1 - r.sign[2]].z - r.orig.z) * r.invdir.z;
+		//tzmin = (bounds[r.sign[2]].z - r.orig.z) * r.invdir.z;
+		//tzmax = (bounds[1 - r.sign[2]].z - r.orig.z) * r.invdir.z;
 
-		if ((tmin > tzmax) || (tzmin > tmax))
-			return false;
+		//if ((tmin > tzmax) || (tzmin > tmax))
+		//	return false;
 
-		if (tzmin > tmin)
-			tmin = tzmin;
-		if (tzmax < tmax)
-			tmax = tzmax;
+		//if (tzmin > tmin)
+		//	tmin = tzmin;
+		//if (tzmax < tmax)
+		//	tmax = tzmax;
 
-		t = tmin;
+		//t = tmin;
 
-		if (t < 0) {
-			t = tmax;
-			if (t < 0) return false;
-		}
+		//if (t < 0) {
+		//	t = tmax;
+		//	if (t < 0) return false;
+		//}
 
-		return true;
+		//return true;
 	}
 	
+	// This is the function I'm currently using
 	bool intersectAllCubes(glm::vec3 t_origin, glm::vec3 t_direction, int &t_x, int &t_y, int &t_z, glm::vec3 &t_hitPoint)
 	{
 		Ray ray(t_origin, t_direction);
 		float t;
 
-		//for (int i = 0; i < m_voxelPositions.size(); i++)
-		//{
-		//	if (intersect(ray, t, m_voxelPositions[i]))
-		//	{
-		//		t_index = i;
-		//		m_hitPoint = ray.orig + ray.dir * t;
-		//		return true;
-		//	}
-		//}
+		// Only check neighbouring chunks for intersections
+		glm::vec3 worldPosition = m_camera->getEye();
 
-		//for (int z = 0; z < 256; ++z)
-		//{
-		//	for (int y = 0; y < 256; ++y)
-		//	{
-		//		for (int x = 0; x < 256; ++x)
-		//		{
-		//			if (m_voxelPositions->at(x, y, z) == false)
-		//			{
-		//				break;
-		//			}
+		for 
+		int chunkCenter = getChunkIndex(worldPosition.x, worldPosition.y, worldPosition.z);
+		int chunkCenter = getChunkIndex(worldPosition.x, worldPosition.y, worldPosition.z);
+		int chunkCenter = getChunkIndex(worldPosition.x, worldPosition.y, worldPosition.z);
 
-		//			if (intersect(ray, t, x, y, z))
-		//			{
-		//				m_hitPoint = ray.orig + ray.dir * t;
-		//				t_x = x;
-		//				t_y = y;
-		//				t_z = z;
+		int map_w = MAP_WIDTH / 16;
+		int map_h = MAP_HEIGHT / 16;
+		int map_d = MAP_DEPTH / 16;
 
-		//				return true;
-		//			}
-		//		}
-		//	}
-		//}
+		std::vector<Indices> neighbouringChunks = { chunkIndex  };
+
+		for (int i = 0; i < m_voxelPositions.size(); i++)
+		{
+			if (intersect(ray, t, m_voxelPositions[i]))
+			{
+				t_index = i;
+				m_hitPoint = ray.orig + ray.dir * t;
+				return true;
+			}
+		}
+
+		for (int z = 0; z < 256; ++z)
+		{
+			for (int y = 0; y < 256; ++y)
+			{
+				for (int x = 0; x < 256; ++x)
+				{
+					if (m_voxelPositions->at(x, y, z) == false)
+					{
+						break;
+					}
+
+					if (intersect(ray, t, x, y, z))
+					{
+						m_hitPoint = ray.orig + ray.dir * t;
+						t_x = x;
+						t_y = y;
+						t_z = z;
+
+						return true;
+					}
+				}
+			}
+		}
 
 		return false;
 	}
