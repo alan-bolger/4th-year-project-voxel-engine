@@ -1,6 +1,15 @@
 // *******************************
 // * Chunk.h - Alan Bolger, 2020 *
 // *******************************
+// Chunks store voxels (For now, hehe). A voxel is represented by a byte (char) because it is smol.
+//
+// 0 = AIR
+// 1 = GRASS
+// 2 = WATER
+// 3 - TREE
+// 4 - LEAF
+//
+// Yeah, so that's it. Bye.
 
 #ifndef CHUNK_H
 #define CHUNK_H
@@ -21,7 +30,7 @@ public:
 
 		for (unsigned int i = 0; i < size; ++i)
 		{
-			voxels[i] = Voxel::AIR;
+			voxels[i] = 0; // 0 is air
 		}
 	};
 
@@ -41,7 +50,7 @@ public:
 	/// <summary>
 	/// Checks the chunk to see if it's empty.
 	/// </summary>
-	/// <returns>True if chunk is empty.</returns>
+	/// <returns>True if the chunk is empty.</returns>
 	bool checkIsEmpty()
 	{
 		for (int z = 0; z < 16; ++z)
@@ -50,9 +59,9 @@ public:
 			{
 				for (int x = 0; x < 16; ++x)
 				{
-					if (voxels[at(x, y, z)] != Voxel::AIR)
+					if (voxels[at(x, y, z)] != 0)
 					{
-						return false;
+						return false;						
 					}
 				}
 			}
@@ -94,7 +103,7 @@ public:
 		return indices;
 	}
 
-	std::vector<Voxel> voxels;
+	std::vector<char> voxels;
 };
 
 #endif // !CHUNK_H

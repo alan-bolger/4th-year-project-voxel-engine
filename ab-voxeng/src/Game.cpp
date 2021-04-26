@@ -159,11 +159,7 @@ void Game::initialise()
 	map = new Map();
 	map->populate(m_terrain->heightMap, m_terrain->treeMap, m_terrain->waterMap);
 
-	//water = new Map();
-	//water->populate(m_terrain->waterMap);
-
-	//trees = new Map();
-	//trees->placeScenery(m_terrain->treeMap);
+	delete m_terrain; // Don't need this anymore
 
 	int map_w = MAP_WIDTH / 16;
 	int map_h = MAP_HEIGHT / 16;	
@@ -190,26 +186,26 @@ void Game::initialise()
 							{
 								int chunkIndex = map->at(x, y, z);
 								int voxelIndex = map->chunks[chunkIndex]->at(vX, vY, vZ);
-								Voxel *voxel = &map->chunks[chunkIndex]->voxels[voxelIndex];
+								char *voxel = &map->chunks[chunkIndex]->voxels[voxelIndex];
 
-								if (*voxel == Voxel::AIR)
+								if (*voxel == 0) // Air
 								{
 									continue;
 								}
 
-								if (*voxel == Voxel::GRASS)
+								if (*voxel == 1) // Grass
 								{
 									m_cube.instancingPositions.push_back(glm::translate(glm::mat4(1.0f), glm::vec3(x * 16 + vX, y * 16 + vY, z * 16 + vZ)));
 								}
-								else if (*voxel == Voxel::WATER)
+								else if (*voxel == 2) // Water
 								{
 									m_waterBlock.instancingPositions.push_back(glm::translate(glm::mat4(1.0f), glm::vec3(x * 16 + vX, y * 16 + vY, z * 16 + vZ)));
 								}
-								else if (*voxel == Voxel::TREE)
+								else if (*voxel == 3) // Tree
 								{
 									m_treeBlock.instancingPositions.push_back(glm::translate(glm::mat4(1.0f), glm::vec3(x * 16 + vX, y * 16 + vY, z * 16 + vZ)));
 								}
-								else if (*voxel == Voxel::LEAF)
+								else if (*voxel == 4) // Leaf
 								{
 									m_leafBlock.instancingPositions.push_back(glm::translate(glm::mat4(1.0f), glm::vec3(x * 16 + vX, y * 16 + vY, z * 16 + vZ)));
 								}
@@ -551,25 +547,6 @@ void Game::draw()
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL); // Turn off
 	}
 }
-
-
-/// <summary>
-/// Returns a pointer 
-/// </summary>
-/// <param name="x"></param>
-/// <param name="y"></param>
-/// <param name="z"></param>
-/// <returns></returns>
-int Game::getChunkIndex(int x, int y, int z)
-{
-	//int x = MAP_WIDTH / 16;
-	//int y = MAP_HEIGHT / 16;
-	//int z = MAP_DEPTH / 16;
-
-	return 1;
-}
-
-
 
 /// <summary>
 /// Initialises the compute shader.

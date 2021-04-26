@@ -45,7 +45,7 @@ public:
 	/// <param name="x">The voxel's world position x value.</param>
 	/// <param name="y">The voxel's world position y value.</param>
 	/// <param name="z">The voxel's world position z value.</param>
-	void voxel(int x, int y, int z, Voxel voxelType)
+	void voxel(int x, int y, int z, char type)
 	{
 		if (x >= MAP_WIDTH || x < 0 || y >= MAP_HEIGHT || y < 0 || z >= MAP_DEPTH || z < 0)
 		{
@@ -63,7 +63,7 @@ public:
 		int voxZ = std::floor(z % 16);
 
 		int index = this->at(chunkX, chunkY, chunkZ);
-		chunks[index]->voxels[chunks[index]->at(voxX, voxY, voxZ)] = voxelType;
+		chunks[index]->voxels[chunks[index]->at(voxX, voxY, voxZ)] = type;
 	}
 
 	/// <summary>
@@ -72,12 +72,12 @@ public:
 	/// <param name="x">The voxel's world position x value.</param>
 	/// <param name="y">The voxel's world position y value.</param>
 	/// <param name="z">The voxel's world position z value.</param>
-	/// <returns>The voxel at the given position.</returns>
-	Voxel voxel(int x, int y, int z)
+	/// <returns>The voxel type at the given position.</returns>
+	char voxel(int x, int y, int z)
 	{
 		if (x >= MAP_WIDTH || x < 0 || y >= MAP_HEIGHT || y < 0 || z >= MAP_DEPTH || z < 0)
 		{
-			return Voxel::AIR;
+			return 0;
 		}
 		
 		// Get chunk
@@ -103,21 +103,14 @@ public:
 		for (int y = 0; y < MAP_DEPTH; ++y)
 		{
 			for (int x = 0; x < MAP_WIDTH; ++x)
-			{
-				voxel(x, heightMap[x][y], y, Voxel::GRASS);
+			{				
+				voxel(x, heightMap[x][y], y, 1); // Grass
+				voxel(x, waterMap[x][y], y, 2);// Water
 			}
 		}
 
-		for (int y = 0; y < MAP_DEPTH; ++y)
-		{
-			for (int x = 0; x < MAP_WIDTH; ++x)
-			{
-				voxel(x, waterMap[x][y], y, Voxel::WATER);
-			}
-		}
-
-		placeScenery(treeMap);
-		checkAllChunks();
+		placeScenery(treeMap); // Trees
+		checkAllChunks(); // Delete empty chunks
 	}
 
 	/// <summary>
@@ -141,7 +134,7 @@ public:
 				// Creates a tree trunk of random height
 				for (int i = 0; i < f_treeHeight; i++)
 				{
-					voxel(x, treeMap[x][y] + i, y, Voxel::TREE);
+					voxel(x, treeMap[x][y] + i, y, 3);
 				}
 
 				int yBegin = treeMap[x][y] + f_treeHeight;
@@ -155,7 +148,7 @@ public:
 					{
 						for (int width = x - f_treeTopScale + modifier; width < x + f_treeTopScale - modifier + 1; ++width)
 						{
-							voxel(width, height, depth, Voxel::LEAF);
+							voxel(width, height, depth, 4);
 						}
 					}
 
@@ -199,6 +192,8 @@ public:
 
 	/// <summary>
 	/// Use this to convert a 3D array index value into a 1D array index value.
+	/// This is specifically used to get the index value from an array of dimensions 16 x 16 x 16.
+	/// Only use this with chunks.
 	/// </summary>
 	/// <param name="x">The X value.</param>
 	/// <param name="y">The Y value.</param>
@@ -214,6 +209,8 @@ public:
 
 	/// <summary>
 	/// Use this to convert a 1D array index value into a 3D array index value.
+	/// This is specifically used to get the index value from an array of dimensions 16 x 16 x 16.
+	/// Only use this with chunks.
 	/// </summary>
 	/// <param name="i">The 1D index value.</param>
 	/// <returns>A 3D array index value.</returns>

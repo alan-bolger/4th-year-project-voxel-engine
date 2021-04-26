@@ -93,9 +93,6 @@ private:
 	bool m_raytracingOn = false;
 	bool m_instanceArrayUpdated = false;
 	Map *map;
-	Map *water;
-	Map *trees;
-	//Octree<bool> *m_voxelOctree;
 
 	// Quad for render to texture
 	GLuint m_quadVertexArrayObjectID;
@@ -175,8 +172,6 @@ private:
 	void processEvents();
 	void update(double t_deltaTime);
 	void draw();
-	int getChunkIndex(int x, int y, int z);
-	void getVoxelIndex(int chunkIndex, int x, int y, int z);
 	void initialiseRaytracing();
 	void raytrace();
 	void renderTextureToQuad(GLuint &t_textureID);
