@@ -30,8 +30,6 @@ Game::~Game()
 	delete m_renderQuadShader;
 	delete m_computeShader;
 	delete m_skyboxShader;
-	delete m_terrain;
-	//delete m_voxelOctree;
 
 	ImGui_ImplOpenGL3_Shutdown();
 	ImGui_ImplSDL2_Shutdown();
