@@ -127,12 +127,12 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
     <LibraryPath>$(LibraryPath);</LibraryPath>
-    <IncludePath>$(ProjectDir)\h;$(ProjectDir)\libs\octree;$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir)\h;$(IncludePath)</IncludePath>
     <SourcePath>$(ProjectDir)\src;$(SourcePath);</SourcePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <LibraryPath>$(ProjectDir)\libs\glew;$(ProjectDir)\libs\octree;$(ProjectDir)\libs\SDL2;$(LibraryPath)</LibraryPath>
+    <LibraryPath>$(ProjectDir)\libs\glew;$(ProjectDir)\libs\SDL2;$(LibraryPath)</LibraryPath>
     <IncludePath>$(ProjectDir)\libs;$(ProjectDir)\sdl2_image\include;$(ProjectDir)\sdl2_ttf\include;$(ProjectDir)\imgui\backends;$(ProjectDir)\imgui;$(ProjectDir)\sdl2\include;$(ProjectDir)\libs\octree;$(ProjectDir)\h;$(IncludePath)</IncludePath>
     <SourcePath>$(ProjectDir)\src;$(SourcePath)</SourcePath>
   </PropertyGroup>

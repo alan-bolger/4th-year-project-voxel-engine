@@ -12,79 +12,89 @@ class Chunk
 public:
 	Chunk()
 	{
-		int X = 16;
-		int Y = 16;
-		int Z = 16;
+		int x = 16;
+		int y = 16;
+		int z = 16;
+		int size = x * y * z;
 
-		voxels = new Voxel **[4096];
+		voxels.resize(size);
 
-		for (int i = 0; i < X; i++)
+		for (unsigned int i = 0; i < size; ++i)
 		{
-			voxels[i] = new Voxel * [Y];
-
-			for (int j = 0; j < Y; j++)
-			{
-				voxels[i][j] = new Voxel[Z];
-			}
-		}
-
-		for (int z = 0; z < 16; ++z)
-		{
-			for (int y = 0; y < 16; ++y)
-			{
-				for (int x = 0; x < 16; ++x)
-				{
-					voxels[x][y][z] = Voxel::AIR;
-				}
-			}
+			voxels[i] = Voxel::AIR;
 		}
 	};
 
 	~Chunk()
 	{
-		int X = 16;
-		int Y = 16;
-		int Z = 16;
+		//int x = 16;
+		//int y = 16;
+		//int z = 16;
+		//int size = x * y * z;
 
-		for (int i = 0; i < X; i++)
-		{
-			for (int j = 0; j < Y; j++)
-			{
-				delete[] voxels[i][j];
-			}
-
-			delete[] voxels[i];
-		}
-
-		delete[] voxels;
+		//for (unsigned int i = 0; i < size; ++i)
+		//{
+		//	delete voxels[i];
+		//}
 	};
 
 	/// <summary>
 	/// Checks the chunk to see if it's empty.
-	/// If it's empty then the chunk flag is set to true.
 	/// </summary>
-	void check()
+	/// <returns>True if chunk is empty.</returns>
+	bool checkIsEmpty()
 	{
-		empty = true;
-
 		for (int z = 0; z < 16; ++z)
 		{
 			for (int y = 0; y < 16; ++y)
 			{
 				for (int x = 0; x < 16; ++x)
 				{
-					if (voxels[x][y][z] != Voxel::AIR)
+					if (voxels[at(x, y, z)] != Voxel::AIR)
 					{
-						empty = false;
-						return;
+						return false;
 					}
 				}
 			}
 		}
+
+		return true;
 	};
 
-	Voxel ***voxels;
-	bool empty = true;
+	/// <summary>
+	/// Use this to convert a 3D array index value into a 1D array index value.
+	/// </summary>
+	/// <param name="x">The X value.</param>
+	/// <param name="y">The Y value.</param>
+	/// <param name="z">The Z value.</param>
+	/// <returns>A 1D array index value.</returns>
+	int at(int x, int y, int z)
+	{
+		int map_h = 16;
+		int map_d = 16;
+
+		return x * map_h * map_d + y * map_d + z;
+	}
+
+	/// <summary>
+	/// Use this to convert a 1D array index value into a 3D array index value.
+	/// </summary>
+	/// <param name="i">The 1D index value.</param>
+	/// <returns>A 3D array index value.</returns>
+	Indices at(int i)
+	{
+		int map_h = 16;
+		int map_d = 16;
+
+		Indices indices;
+		indices.x = i / (map_h * map_d);
+		indices.y = (i - indices.x * map_h * map_d) / map_d;
+		indices.z = i - indices.x * map_h * map_d - indices.y * map_d;
+
+		return indices;
+	}
+
+	std::vector<Voxel> voxels;
 };
 
 #endif // !CHUNK_H
