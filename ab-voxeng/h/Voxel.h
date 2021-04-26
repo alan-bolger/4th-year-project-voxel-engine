@@ -19,5 +19,7 @@ enum class Voxel
 	LEAF
 };
 
+
+
 #endif // !VOXEL_H
 

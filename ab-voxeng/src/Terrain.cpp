@@ -19,6 +19,7 @@ ab::Terrain::Terrain()
 ab::Terrain::~Terrain()
 {
 	delete m_noise;
+	m_noise = nullptr;
 }
 
 /// <summary>
