@@ -13,50 +13,38 @@ class Map
 public:
 	Map()
 	{
-		int X = MAP_WIDTH / 16;
-		int Y = MAP_HEIGHT / 16;
-		int Z = MAP_DEPTH / 16;
+		int x = MAP_WIDTH / 16;
+		int y = MAP_HEIGHT / 16;
+		int z = MAP_DEPTH / 16;
+		int size = x * y * z;
 
-		chunks = new Chunk**[4096];
+		chunks.resize(size);
 
-		for (int i = 0; i < X; i++)
+		for (unsigned int i = 0; i < size; ++i)
 		{
-			chunks[i] = new Chunk*[Y];
-
-			for (int j = 0; j < Y; j++) 
-			{
-				chunks[i][j] = new Chunk[Z];
-			}
+			chunks[i] = new Chunk();
 		}
-	};
+	}
 
 	~Map()
 	{
-		int X = MAP_WIDTH / 16;
-		int Y = MAP_HEIGHT / 16;
-		int Z = MAP_DEPTH / 16;
+		int x = MAP_WIDTH / 16;
+		int y = MAP_HEIGHT / 16;
+		int z = MAP_DEPTH / 16;
+		int size = x * y * z;
 
-		for (int i = 0; i < X; i++)
+		for (unsigned int i = 0; i < size; ++i)
 		{
-			for (int j = 0; j < Y; j++) 
-			{
-				delete[] chunks[i][j];
-			}
-
-			delete[] chunks[i];
+			delete chunks[i];
 		}
-
-		delete[] chunks;
-	};
+	}
 
 	/// <summary>
-	/// Set a voxel to visible or not visible.
-	/// Change this to a colour value
+	/// Sets info on a specific voxel.
 	/// </summary>
 	/// <param name="x">The voxel's world position x value.</param>
 	/// <param name="y">The voxel's world position y value.</param>
 	/// <param name="z">The voxel's world position z value.</param>
-	/// <param name="visible">True or false. You decide.</param>
 	void voxel(int x, int y, int z, Voxel voxelType)
 	{
 		if (x >= MAP_WIDTH || x < 0 || y >= MAP_HEIGHT || y < 0 || z >= MAP_DEPTH || z < 0)
@@ -74,23 +62,24 @@ public:
 		int voxY = std::floor(y % 16);
 		int voxZ = std::floor(z % 16);
 
-		chunks[chunkX][chunkY][chunkZ].voxels[voxX][voxY][voxZ] = voxelType;
+		int index = this->at(chunkX, chunkY, chunkZ);
+		chunks[index]->voxels[chunks[index]->at(voxX, voxY, voxZ)] = voxelType;
 	}
 
 	/// <summary>
-	/// Finds out if a voxel is visible or not visible.
+	/// Gets info on a specific voxel.
 	/// </summary>
 	/// <param name="x">The voxel's world position x value.</param>
 	/// <param name="y">The voxel's world position y value.</param>
 	/// <param name="z">The voxel's world position z value.</param>
-	/// <param name="visible">True or false. You decide.</param>
+	/// <returns>The voxel at the given position.</returns>
 	Voxel voxel(int x, int y, int z)
 	{
 		if (x >= MAP_WIDTH || x < 0 || y >= MAP_HEIGHT || y < 0 || z >= MAP_DEPTH || z < 0)
 		{
 			return Voxel::AIR;
 		}
-
+		
 		// Get chunk
 		int chunkX = std::floor(x / 16);
 		int chunkY = std::floor(y / 16);
@@ -101,7 +90,8 @@ public:
 		int voxY = std::floor(y % 16);
 		int voxZ = std::floor(z % 16);
 
-		return chunks[chunkX][chunkY][chunkZ].voxels[voxX][voxY][voxZ];
+		int index = this->at(chunkX, chunkY, chunkZ);
+		return chunks[index]->voxels[chunks[index]->at(voxX, voxY, voxZ)];
 	}
 
 	/// <summary>
@@ -128,7 +118,7 @@ public:
 
 		placeScenery(treeMap);
 		checkAllChunks();
-	};
+	}
 
 	/// <summary>
 	/// Populates the map with voxels.
@@ -145,10 +135,10 @@ public:
 					continue;
 				}
 
-				int f_treeHeight = rand() % 7 + 4; // Height will be between 6 to 9 units for now
-				int f_treeTopScale = rand() % 4 + 4; // Size will be between 4 to 6 units for now
+				int f_treeHeight = rand() % 7 + 4;
+				int f_treeTopScale = rand() % 4 + 4;
 
-				// Creates a tree trunk
+				// Creates a tree trunk of random height
 				for (int i = 0; i < f_treeHeight; i++)
 				{
 					voxel(x, treeMap[x][y] + i, y, Voxel::TREE);
@@ -156,23 +146,28 @@ public:
 
 				int yBegin = treeMap[x][y] + f_treeHeight;
 
-				// Creates a tree top
-				for (int fz = y - f_treeTopScale; fz < y + f_treeTopScale + 1; ++fz)
+				// Creates a pointy tree top of a random size
+				int modifier = 0;
+
+				for (int height = yBegin; height < yBegin + f_treeTopScale + 1; ++height)
 				{
-					for (int fy = yBegin; fy < yBegin + f_treeTopScale + 1; ++fy)
+					for (int depth = y - f_treeTopScale + modifier; depth < y + f_treeTopScale - modifier + 1; ++depth)
 					{
-						for (int fx = x - f_treeTopScale; fx < x + f_treeTopScale + 1; ++fx)
+						for (int width = x - f_treeTopScale + modifier; width < x + f_treeTopScale - modifier + 1; ++width)
 						{
-							voxel(fx, fy, fz, Voxel::LEAF);
+							voxel(width, height, depth, Voxel::LEAF);
 						}
 					}
-				}
+
+					modifier += 1;
+				}				
 			}
 		}
+	}
 
-		checkAllChunks();
-	};
-
+	/// <summary>
+	/// Checks all of the chunks in a map and deletes them if they contain only air.
+	/// </summary>
 	void checkAllChunks()
 	{
 		int map_w = MAP_WIDTH / 16;
@@ -185,13 +180,57 @@ public:
 			{
 				for (int x = 0; x < map_w; ++x)
 				{
-					chunks[x][y][z].check();
+					// If there is a null pointer at [x, y, z] then that chunk
+					// is empty/doesn't exist and doesn't need to be checked
+					if (chunks[at(x, y, z)] == nullptr)
+					{
+						continue;
+					}
+					// If the pointer is not null then check the chunk it's pointing to
+					else if (chunks[at(x, y, z)]->checkIsEmpty())
+					{
+						delete chunks[at(x, y, z)]; // Delete the empty chunk
+						chunks[at(x, y, z)] = nullptr; // Make pointer null
+					}
 				}
 			}
 		}
 	}
 
-	Chunk ***chunks;
+	/// <summary>
+	/// Use this to convert a 3D array index value into a 1D array index value.
+	/// </summary>
+	/// <param name="x">The X value.</param>
+	/// <param name="y">The Y value.</param>
+	/// <param name="z">The Z value.</param>
+	/// <returns>A 1D array index value.</returns>
+	int at(int x, int y, int z)
+	{
+		int map_h = MAP_HEIGHT / 16;
+		int map_d = MAP_DEPTH / 16;
+
+		return x * map_h * map_d + y * map_d + z;
+	}
+
+	/// <summary>
+	/// Use this to convert a 1D array index value into a 3D array index value.
+	/// </summary>
+	/// <param name="i">The 1D index value.</param>
+	/// <returns>A 3D array index value.</returns>
+	Indices at(int i)
+	{
+		int map_h = MAP_HEIGHT / 16;
+		int map_d = MAP_DEPTH / 16;
+
+		Indices indices;
+		indices.x = i / (map_h * map_d);
+		indices.y = (i - indices.x * map_h * map_d) / map_d;
+		indices.z = i - indices.x * map_h * map_d - indices.y * map_d;
+
+		return indices;
+	}
+
+	std::vector<Chunk*> chunks;
 };
 
 #endif // !MAP_H

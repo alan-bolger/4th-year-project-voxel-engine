@@ -176,7 +176,11 @@ void Game::initialise()
 		{
 			for (int x = 0; x < map_w; ++x)
 			{
-				if (!map->chunks[x][y][z].empty) // Don't check empty chunks
+				if (map->chunks[map->at(x, y, z)] == nullptr) // Don't check empty chunks
+				{
+					continue;
+				}
+				else
 				{
 					for (int vZ = 0; vZ < 16; ++vZ)
 					{
@@ -184,20 +188,28 @@ void Game::initialise()
 						{
 							for (int vX = 0; vX < 16; ++vX)
 							{
-								if (map->chunks[x][y][z].voxels[vX][vY][vZ] == Voxel::GRASS)
+								int chunkIndex = map->at(x, y, z);
+								int voxelIndex = map->chunks[chunkIndex]->at(vX, vY, vZ);
+								Voxel *voxel = &map->chunks[chunkIndex]->voxels[voxelIndex];
+
+								if (*voxel == Voxel::AIR)
 								{
-									// TODO:: Split instancing positions into sections attached to each chunk maybe
+									continue;
+								}
+
+								if (*voxel == Voxel::GRASS)
+								{
 									m_cube.instancingPositions.push_back(glm::translate(glm::mat4(1.0f), glm::vec3(x * 16 + vX, y * 16 + vY, z * 16 + vZ)));
 								}
-								else if (map->chunks[x][y][z].voxels[vX][vY][vZ] == Voxel::WATER)
+								else if (*voxel == Voxel::WATER)
 								{
 									m_waterBlock.instancingPositions.push_back(glm::translate(glm::mat4(1.0f), glm::vec3(x * 16 + vX, y * 16 + vY, z * 16 + vZ)));
 								}
-								else if (map->chunks[x][y][z].voxels[vX][vY][vZ] == Voxel::TREE)
+								else if (*voxel == Voxel::TREE)
 								{
 									m_treeBlock.instancingPositions.push_back(glm::translate(glm::mat4(1.0f), glm::vec3(x * 16 + vX, y * 16 + vY, z * 16 + vZ)));
 								}
-								else if (map->chunks[x][y][z].voxels[vX][vY][vZ] == Voxel::LEAF)
+								else if (*voxel == Voxel::LEAF)
 								{
 									m_leafBlock.instancingPositions.push_back(glm::translate(glm::mat4(1.0f), glm::vec3(x * 16 + vX, y * 16 + vY, z * 16 + vZ)));
 								}
@@ -244,6 +256,16 @@ void Game::initialise()
 		"models/alpha_island/alpha_island_bk.tga",
 		"models/alpha_island/alpha_island_ft.tga"
 	};
+
+	//std::vector<std::string> f_faces
+	//{
+	//	"models/stratosphere/stratosphere_rt.tga",
+	//	"models/stratosphere/stratosphere_lf.tga",
+	//	"models/stratosphere/stratosphere_up.tga",
+	//	"models/stratosphere/stratosphere_dn.tga",
+	//	"models/stratosphere/stratosphere_bk.tga",
+	//	"models/stratosphere/stratosphere_ft.tga"
+	//};
 
 	m_cubeMapTextureID = ab::OpenGL::loadSkyBoxCubeMap(f_faces);
 
@@ -529,6 +551,25 @@ void Game::draw()
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL); // Turn off
 	}
 }
+
+
+/// <summary>
+/// Returns a pointer 
+/// </summary>
+/// <param name="x"></param>
+/// <param name="y"></param>
+/// <param name="z"></param>
+/// <returns></returns>
+int Game::getChunkIndex(int x, int y, int z)
+{
+	//int x = MAP_WIDTH / 16;
+	//int y = MAP_HEIGHT / 16;
+	//int z = MAP_DEPTH / 16;
+
+	return 1;
+}
+
+
 
 /// <summary>
 /// Initialises the compute shader.

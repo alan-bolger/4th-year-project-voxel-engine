@@ -28,7 +28,6 @@
 #include "XboxOneController.h"
 #include "Terrain.h"
 #include "Debug.h"
-#include "Octree.h"
 #include "Map.h"
 
 class Ray
@@ -176,6 +175,8 @@ private:
 	void processEvents();
 	void update(double t_deltaTime);
 	void draw();
+	int getChunkIndex(int x, int y, int z);
+	void getVoxelIndex(int chunkIndex, int x, int y, int z);
 	void initialiseRaytracing();
 	void raytrace();
 	void renderTextureToQuad(GLuint &t_textureID);
