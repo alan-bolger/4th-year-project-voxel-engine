@@ -16,23 +16,6 @@
 
 #include "Voxel.h"
 
-class Ray
-{
-public:
-	// TODO: Consider putting this into a struct possibly
-	Ray(const glm::vec3& orig, const glm::vec3& dir) : orig(orig), dir(dir)
-	{
-		invdir = 1.0f / dir;
-		sign[0] = (invdir.x < 0);
-		sign[1] = (invdir.y < 0);
-		sign[2] = (invdir.z < 0);
-	}
-
-	glm::vec3 orig, dir; // ray orig and dir 
-	glm::vec3 invdir;
-	int sign[3];
-};
-
 class Chunk
 {
 public:
@@ -53,15 +36,7 @@ public:
 
 	~Chunk()
 	{
-		//int x = 16;
-		//int y = 16;
-		//int z = 16;
-		//int size = x * y * z;
 
-		//for (unsigned int i = 0; i < size; ++i)
-		//{
-		//	delete voxels[i];
-		//}
 	};
 
 	/// <summary>
@@ -128,7 +103,7 @@ public:
 	/// <param name="t_direction">The ray's direction.</param>
 	/// <param name="t_hitInfo">Stores the information from the cube that was intersected.</param>
 	/// <returns>True if an intersection has occurred.</returns>
-	bool checkAllCubesIntersect(glm::vec3 t_origin, glm::vec3 t_direction, Indices chunkIndex, HitInfo &t_hitInfo)
+	bool checkAllCubesIntersect(glm::vec3 t_origin, glm::vec3 t_direction, Indices chunkIndex, HitInfo &hitInfo)
 	{
 		float f_smallest = voxels.size();
 		bool f_found = false;
@@ -148,12 +123,9 @@ public:
 
 					if (f_lambda.x > 0.0 && f_lambda.x < f_lambda.y && f_lambda.x < f_smallest)
 					{
-						t_hitInfo.lambda = f_lambda;
-						t_hitInfo.center = glm::vec3(chunkIndex.x * 16 + x, chunkIndex.y * 16 + y, chunkIndex.z * 16 + z);
-						// t_hitInfo.bi = i;
+						hitInfo.lambda = f_lambda;
+						hitInfo.center = glm::vec3(chunkIndex.x * 16 + x, chunkIndex.y * 16 + y, chunkIndex.z * 16 + z);
 						f_smallest = f_lambda.x;
-						// m_selectedCube = m_voxelPositions[i];
-						voxels[at(x, y, z)] = 0;
 						f_found = true;
 					}
 				}
@@ -183,85 +155,6 @@ public:
 		float f_far = std::min(std::min(f_t2.x, f_t2.y), f_t2.z);
 
 		return glm::vec2(f_near, f_far);
-	}
-
-	bool checkChunkIntersect(int chunkX, int chunkY, int chunkZ, glm::vec3 t_origin, glm::vec3 t_direction, glm::vec3& t_hitPoint)
-	{
-		//Ray ray(t_origin, t_direction);
-		//float t;
-
-		//for (int z = 0; z < 16; ++z)
-		//{
-		//	for (int y = 0; y < 16; ++y)
-		//	{
-		//		for (int x = 0; x < 16; ++x)
-		//		{
-		//			if (intersect(ray, t, chunkX * 16 + x, chunkY * 16 + y, chunkZ * 16 + z))
-		//			{
-		//				std::cout << +voxels[at(x, y, z)] << std::endl;
-		//				std::cout << "Chunk: " << chunkX << ", " << chunkY << ", " << chunkZ << std::endl;
-		//				std::cout << "Voxel: " << x << ", " <<  y << ", " << z << std::endl;
-		//				std::cout << "Intersect: " << chunkX * 16 + x << ", " << chunkY * 16 + y << ", " << chunkZ * 16 + z << std::endl;
-		//				t_hitPoint = ray.orig + ray.dir * t; // This will be needed to add a voxel to the world using the mouse
-
-		//				return true;
-		//			}
-		//		}
-		//	}
-		//}
-
-
-
-		return false;
-	}
-
-
-
-	bool intersect(const Ray& r, float& t, int x, int y, int z) const
-	{
-		glm::vec3 bounds[2];
-		glm::vec3 f_cubeSize(0.5, 0.5, 0.5);
-		glm::vec3 f_cubeCenter = glm::vec3(x, y, z);
-
-		// std::cout << x << ", " << y << ", " << z << std::endl;
-
-		bounds[0] = f_cubeCenter - f_cubeSize;
-		bounds[1] = f_cubeCenter + f_cubeSize;
-
-		float tmin, tmax, tymin, tymax, tzmin, tzmax;
-
-		tmin = (bounds[r.sign[0]].x - r.orig.x) * r.invdir.x;
-		tmax = (bounds[1 - r.sign[0]].x - r.orig.x) * r.invdir.x;
-		tymin = (bounds[r.sign[1]].y - r.orig.y) * r.invdir.y;
-		tymax = (bounds[1 - r.sign[1]].y - r.orig.y) * r.invdir.y;
-
-		if ((tmin > tymax) || (tymin > tmax))
-			return false;
-
-		if (tymin > tmin)
-			tmin = tymin;
-		if (tymax < tmax)
-			tmax = tymax;
-
-		tzmin = (bounds[r.sign[2]].z - r.orig.z) * r.invdir.z;
-		tzmax = (bounds[1 - r.sign[2]].z - r.orig.z) * r.invdir.z;
-
-		if ((tmin > tzmax) || (tzmin > tmax))
-			return false;
-
-		if (tzmin > tmin)
-			tmin = tzmin;
-		if (tzmax < tmax)
-			tmax = tzmax;
-
-		t = tmin;
-
-		if (t < 0) {
-			t = tmax;
-			if (t < 0) return false;
-		}
-
-		return true;
 	}
 
 	std::vector<char> voxels;

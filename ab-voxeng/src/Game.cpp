@@ -159,16 +159,20 @@ void Game::initialise()
 
 	delete m_terrain; // Don't need this anymore
 
-	updateEntireMap(); // This copys the voxel positions to the GPU
+	updateEntireMap(); // This copies the voxel positions to the GPU
 
-	// Confirmation that chunks are empty or contain voxels
+	//int map_w = MAP_WIDTH / 16;
+	//int map_h = MAP_HEIGHT / 16;
+	//int map_d = MAP_DEPTH / 16;
+
+	//// Confirmation that chunks are empty or contain voxels
 	//for (int z = 0; z < map_d; ++z)
 	//{
 	//	for (int y = 0; y < map_h; ++y)
 	//	{
 	//		for (int x = 0; x < map_w; ++x)
 	//		{
-	//			if (map->chunks[x][y][z].empty)
+	//			if (map->chunks[map->at(x, y, z)] == nullptr)
 	//			{
 	//				std::cout << "Chunk [" << x << "][" << y << "][" << z << "] is empty!" << std::endl;
 	//			}
@@ -265,29 +269,26 @@ void Game::processEvents()
 		// Handle left and right mouse button clicks
 		if (f_event.type == SDL_MOUSEBUTTONDOWN)
 		{
-			int x, y, z;
-
 			if (f_event.button.button == SDL_BUTTON_LEFT) // Add voxel
 			{
 				m_rayDirection = m_camera->getRayFromMousePos(m_mousePos.x, m_mousePos.y);
 
-				if (checkForVoxelIntersections(m_camera->getEye(), m_rayDirection, x, y, z, m_hitPoint))
+				if (checkForVoxelIntersections(m_camera->getEye(), m_rayDirection, m_hitPoint))
 				{
-					std::cout << "Hit: " << m_hitInfo.center.x << ", " << m_hitInfo.center.y << ", " << m_hitInfo.center.z << std::endl;
-					map->voxel((int)m_hitInfo.center.x, (int)m_hitInfo.center.y, (int)m_hitInfo.center.z, 2);
+					map->voxel((int)m_hitInfo.center.x, (int)m_hitInfo.center.y + 1, (int)m_hitInfo.center.z, 1);
 					updateEntireMap();
 				}
 			}
-			//else if (f_event.button.button == SDL_BUTTON_RIGHT) // Delete voxel
-			//{
-			//	m_rayDirection = m_camera->getRayFromMousePos(m_mousePos.x, m_mousePos.y);
-			//	int index;
+			else if (f_event.button.button == SDL_BUTTON_RIGHT) // Delete voxel
+			{
+				m_rayDirection = m_camera->getRayFromMousePos(m_mousePos.x, m_mousePos.y);
 
-			//	if (checkForVoxelIntersections(m_camera->getEye(), m_rayDirection, x, y, z, m_hitPoint))
-			//	{
-			//		updateEntireMap();
-			//	}
-			//}
+				if (checkForVoxelIntersections(m_camera->getEye(), m_rayDirection, m_hitPoint))
+				{
+					map->voxel((int)m_hitInfo.center.x, (int)m_hitInfo.center.y, (int)m_hitInfo.center.z, 0);
+					updateEntireMap();
+				}
+			}
 		}
 
 		m_controller->processEvents(f_event);
@@ -607,7 +608,7 @@ Indices Game::getChunkXYZ(int x, int y, int z)
 	return indices;
 }
 
-bool Game::checkForVoxelIntersections(glm::vec3 t_origin, glm::vec3 t_direction, int& t_x, int& t_y, int& t_z, glm::vec3& t_hitPoint)
+bool Game::checkForVoxelIntersections(glm::vec3 t_origin, glm::vec3 t_direction, glm::vec3& t_hitPoint)
 {
 	// Only check neighbouring chunks for intersections
 	glm::vec3 worldPosition = m_camera->getEye();
@@ -634,20 +635,14 @@ bool Game::checkForVoxelIntersections(glm::vec3 t_origin, glm::vec3 t_direction,
 				int index = map->at(chunkStart.x + x, chunkStart.y + y, chunkStart.z + z);
 				// std::cout << "Size: " << map->chunks.size() << std::endl;
 
-				if (index < 0 || index > 32768)
+				if (index < 0 || index > map->chunks.size())
 				{
-					std::cout << "Out of bounds!" << std::endl;
-					continue;
+					continue; // If chunk is out of bounds then go to next iteration
 				}
 
 				// If chunk is a null pointer then the chunk is air (and also doesn't exist)
 				if (map->chunks[index] != nullptr)
 				{
-					//if (map->chunks[index]->checkChunkIntersect(chunkStart.x + x, chunkStart.y + y, chunkStart.z + z, t_origin, t_direction, t_hitPoint))
-					//{
-					//	return true;
-					//}
-
 					Indices chunkIndex = { chunkStart.x + x, chunkStart.y + y, chunkStart.z + z };
 
 					if (map->chunks[index]->checkAllCubesIntersect(t_origin, t_direction, chunkIndex, m_hitInfo))

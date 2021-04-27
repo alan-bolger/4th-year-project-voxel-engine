@@ -26,6 +26,7 @@ struct HitInfo
 {
 	int bi;
 	glm::vec2 lambda;
+	glm::vec3 intersectPoint;
 	glm::vec3 center;
 };
 

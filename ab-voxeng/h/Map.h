@@ -63,7 +63,22 @@ public:
 		int voxZ = std::floor(z % 16);
 
 		int index = this->at(chunkX, chunkY, chunkZ);
+
+		if (chunks[index] == nullptr)
+		{
+			std::cout << "Creating chunk" << std::endl;
+			chunks[index] = new Chunk();
+		}
+
 		chunks[index]->voxels[chunks[index]->at(voxX, voxY, voxZ)] = type;
+				
+		if (chunks[index]->checkIsEmpty())
+		{
+			std::cout << "Deleting chunk" << std::endl;
+
+			delete chunks[index];
+			chunks[index] = nullptr;
+		}
 	}
 
 	/// <summary>
@@ -184,6 +199,8 @@ public:
 					{
 						delete chunks[at(x, y, z)]; // Delete the empty chunk
 						chunks[at(x, y, z)] = nullptr; // Make pointer null
+
+						std::cout << "Chunk deleted" << std::endl;
 					}
 				}
 			}
