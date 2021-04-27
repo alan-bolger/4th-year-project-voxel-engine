@@ -159,61 +159,7 @@ void Game::initialise()
 
 	delete m_terrain; // Don't need this anymore
 
-	int map_w = MAP_WIDTH / 16;
-	int map_h = MAP_HEIGHT / 16;	
-	int map_d = MAP_DEPTH / 16;
-
-	// TODO: Move this into Map class probably
-	for (int z = 0; z < map_d; ++z)
-	{
-		for (int y = 0; y < map_h; ++y)
-		{
-			for (int x = 0; x < map_w; ++x)
-			{
-				if (map->chunks[map->at(x, y, z)] == nullptr) // Don't check empty chunks
-				{
-					continue;
-				}
-				else
-				{
-					for (int vZ = 0; vZ < 16; ++vZ)
-					{
-						for (int vY = 0; vY < 16; ++vY)
-						{
-							for (int vX = 0; vX < 16; ++vX)
-							{
-								int chunkIndex = map->at(x, y, z);
-								int voxelIndex = map->chunks[chunkIndex]->at(vX, vY, vZ);
-								char *voxel = &map->chunks[chunkIndex]->voxels[voxelIndex];
-
-								if (*voxel == 0) // Air
-								{
-									continue;
-								}
-
-								if (*voxel == 1) // Grass
-								{
-									m_cube.instancingPositions.push_back(glm::translate(glm::mat4(1.0f), glm::vec3(x * 16 + vX, y * 16 + vY, z * 16 + vZ)));
-								}
-								else if (*voxel == 2) // Water
-								{
-									m_waterBlock.instancingPositions.push_back(glm::translate(glm::mat4(1.0f), glm::vec3(x * 16 + vX, y * 16 + vY, z * 16 + vZ)));
-								}
-								else if (*voxel == 3) // Tree
-								{
-									m_treeBlock.instancingPositions.push_back(glm::translate(glm::mat4(1.0f), glm::vec3(x * 16 + vX, y * 16 + vY, z * 16 + vZ)));
-								}
-								else if (*voxel == 4) // Leaf
-								{
-									m_leafBlock.instancingPositions.push_back(glm::translate(glm::mat4(1.0f), glm::vec3(x * 16 + vX, y * 16 + vY, z * 16 + vZ)));
-								}
-							}
-						}
-					}
-				}
-			}
-		}		
-	}
+	updateEntireMap(); // This copys the voxel positions to the GPU
 
 	// Confirmation that chunks are empty or contain voxels
 	//for (int z = 0; z < map_d; ++z)
@@ -324,24 +270,24 @@ void Game::processEvents()
 			if (f_event.button.button == SDL_BUTTON_LEFT) // Add voxel
 			{
 				m_rayDirection = m_camera->getRayFromMousePos(m_mousePos.x, m_mousePos.y);
-				int index;
 
-				if (intersectAllCubes(m_camera->getEye(), m_rayDirection, x, y, z, m_hitPoint))
+				if (checkForVoxelIntersections(m_camera->getEye(), m_rayDirection, x, y, z, m_hitPoint))
 				{
-					m_instanceArrayUpdated = true;
+					std::cout << "Hit: " << m_hitInfo.center.x << ", " << m_hitInfo.center.y << ", " << m_hitInfo.center.z << std::endl;
+					map->voxel((int)m_hitInfo.center.x, (int)m_hitInfo.center.y, (int)m_hitInfo.center.z, 2);
+					updateEntireMap();
 				}
 			}
-			else if (f_event.button.button == SDL_BUTTON_RIGHT) // Delete voxel
-			{
-				m_rayDirection = m_camera->getRayFromMousePos(m_mousePos.x, m_mousePos.y);
-				int index;
+			//else if (f_event.button.button == SDL_BUTTON_RIGHT) // Delete voxel
+			//{
+			//	m_rayDirection = m_camera->getRayFromMousePos(m_mousePos.x, m_mousePos.y);
+			//	int index;
 
-				if (intersectAllCubes(m_camera->getEye(), m_rayDirection, x, y, z, m_hitPoint))
-				{
-					//m_voxelOctree->set(x, y, z, false);
-					m_instanceArrayUpdated = true;
-				}
-			}
+			//	if (checkForVoxelIntersections(m_camera->getEye(), m_rayDirection, x, y, z, m_hitPoint))
+			//	{
+			//		updateEntireMap();
+			//	}
+			//}
 		}
 
 		m_controller->processEvents(f_event);
@@ -397,16 +343,16 @@ void Game::update(double t_deltaTime)
 	ImGui::InputFloat("Y pos", &m_selectedCube.y);
 	ImGui::InputFloat("Z pos", &m_selectedCube.z);
 	ImGui::Separator();
-	ImGui::BulletText("Array Element Index");
-	ImGui::Text("Index: %i", m_hitInfo.m_bi);
-	ImGui::Separator();
-	ImGui::BulletText("Raycast Hit");
-	ImGui::InputFloat("X pos", &m_hitPoint.x);
-	ImGui::InputFloat("Y pos", &m_hitPoint.y);
-	ImGui::InputFloat("Z pos", &m_hitPoint.z);
-	ImGui::Separator();
-	ImGui::Separator();
-	ImGui::Separator();
+	//ImGui::BulletText("Array Element Index");
+	//ImGui::Text("Index: %i", m_hitInfo.m_bi);
+	//ImGui::Separator();
+	//ImGui::BulletText("Raycast Hit");
+	//ImGui::InputFloat("X pos", &m_hitPoint.x);
+	//ImGui::InputFloat("Y pos", &m_hitPoint.y);
+	//ImGui::InputFloat("Z pos", &m_hitPoint.z);
+	//ImGui::Separator();
+	//ImGui::Separator();
+	//ImGui::Separator();
 
 	// Camera
 	ImGui::Text("CAMERA");
@@ -481,14 +427,10 @@ void Game::draw()
 		glUseProgram(m_mainShader->m_programID);
 
 		// If the instance array has changed then update it
+		// This only gets done if a voxel is added or removed
+		// TODO: This really needs to be split up somehow, updating the entire array is a bit mad
 		if (m_instanceArrayUpdated)
 		{
-			// Clear array
-			if (m_cube.instancingPositions.size() > 0)
-			{
-				m_cube.instancingPositions.clear();
-			}
-
 			glBindBuffer(GL_ARRAY_BUFFER, m_cube.instanceBufferID);
 			glBufferSubData(GL_ARRAY_BUFFER, 0, m_cube.instancingPositions.size() * sizeof(glm::mat4), &m_cube.instancingPositions[0]);
 
@@ -503,7 +445,7 @@ void Game::draw()
 		ab::OpenGL::draw(m_treeBlock, m_mainShader, "diffuseTexture");
 		ab::OpenGL::draw(m_leafBlock, m_mainShader, "diffuseTexture");
 
-		if (true)
+		if (true) // Yeah, wtf
 		{
 			glDepthFunc(GL_LEQUAL);
 
@@ -544,6 +486,183 @@ void Game::draw()
 	{
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL); // Turn off
 	}
+}
+
+/// <summary>
+/// Gets the chunk array index using a world position.
+/// </summary>
+/// <param name="x">X</param>
+/// <param name="y">Y</param>
+/// <param name="z">Z</param>
+/// <returns>An integer of great value.</returns>
+int Game::getChunkIndex(int x, int y, int z)
+{
+	int map_h = 16;
+	int map_d = 16;
+
+	Indices indices;
+
+	indices.x = std::floor(x / 16);
+	indices.y = std::floor(y / 16);
+	indices.z = std::floor(z / 16);
+
+	return indices.x * map_h * map_d + indices.y * map_d + indices.z;
+}
+
+void Game::updateEntireMap()
+{
+	int map_w = MAP_WIDTH / 16;
+	int map_h = MAP_HEIGHT / 16;
+	int map_d = MAP_DEPTH / 16;
+
+	if (m_cube.instancingPositions.size() > 0)
+	{
+		m_cube.instancingPositions.clear();
+	}
+
+	if (m_waterBlock.instancingPositions.size() > 0)
+	{
+		m_waterBlock.instancingPositions.clear();
+	}
+
+	if (m_treeBlock.instancingPositions.size() > 0)
+	{
+		m_treeBlock.instancingPositions.clear();
+	}
+
+	if (m_leafBlock.instancingPositions.size() > 0)
+	{
+		m_leafBlock.instancingPositions.clear();
+	}
+
+	for (int z = 0; z < map_d; ++z)
+	{
+		for (int y = 0; y < map_h; ++y)
+		{
+			for (int x = 0; x < map_w; ++x)
+			{
+				if (map->chunks[map->at(x, y, z)] == nullptr) // Don't check empty chunks
+				{
+					continue;
+				}
+				else
+				{
+					for (int vZ = 0; vZ < 16; ++vZ)
+					{
+						for (int vY = 0; vY < 16; ++vY)
+						{
+							for (int vX = 0; vX < 16; ++vX)
+							{
+								int chunkIndex = map->at(x, y, z);
+								int voxelIndex = map->chunks[chunkIndex]->at(vX, vY, vZ);
+								char* voxel = &map->chunks[chunkIndex]->voxels[voxelIndex];
+
+								if (*voxel == 0) // Air
+								{
+									continue;
+								}
+
+								if (*voxel == 1) // Grass
+								{
+									m_cube.instancingPositions.push_back(glm::translate(glm::mat4(1.0f), glm::vec3(x * 16 + vX, y * 16 + vY, z * 16 + vZ)));
+								}
+								else if (*voxel == 2) // Water
+								{
+									m_waterBlock.instancingPositions.push_back(glm::translate(glm::mat4(1.0f), glm::vec3(x * 16 + vX, y * 16 + vY, z * 16 + vZ)));
+								}
+								else if (*voxel == 3) // Tree
+								{
+									m_treeBlock.instancingPositions.push_back(glm::translate(glm::mat4(1.0f), glm::vec3(x * 16 + vX, y * 16 + vY, z * 16 + vZ)));
+								}
+								else if (*voxel == 4) // Leaf
+								{
+									m_leafBlock.instancingPositions.push_back(glm::translate(glm::mat4(1.0f), glm::vec3(x * 16 + vX, y * 16 + vY, z * 16 + vZ)));
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+	m_instanceArrayUpdated = true;
+}
+
+/// <summary>
+/// Gets the chunk [x, y, z] positions in the array from a world position.
+/// </summary>
+/// <param name="x">X</param>
+/// <param name="y">Y</param>
+/// <param name="z">Z</param>
+/// <returns>An index value.</returns>
+Indices Game::getChunkXYZ(int x, int y, int z)
+{
+	Indices indices;
+
+	indices.x = std::floor(x / 16);
+	indices.y = std::floor(y / 16);
+	indices.z = std::floor(z / 16);
+
+	return indices;
+}
+
+bool Game::checkForVoxelIntersections(glm::vec3 t_origin, glm::vec3 t_direction, int& t_x, int& t_y, int& t_z, glm::vec3& t_hitPoint)
+{
+	// Only check neighbouring chunks for intersections
+	glm::vec3 worldPosition = m_camera->getEye();
+
+	Indices chunkStart = getChunkXYZ(worldPosition.x, worldPosition.y, worldPosition.z);
+
+	// Set chunk starting [x, y, z]
+	chunkStart.x--;
+	chunkStart.y--;
+	chunkStart.z--;
+
+	// std::cout << "Chunk index: [" << chunkStart.x << ", " << chunkStart.y << ", " << chunkStart.z << "]" << std::endl;
+
+	// Check all the immediate chunks around you (and the one you're in)
+	for (int z = 0; z < 3; ++z)
+	{
+		for (int y = 0; y < 3; ++y)
+		{
+			for (int x = 0; x < 3; ++x)
+			{
+				//int chunk = getChunkIndex(chunkStart.x + x, chunkStart.y + y, chunkStart.z + z);
+				//std::cout << chunk << std::endl;
+
+				int index = map->at(chunkStart.x + x, chunkStart.y + y, chunkStart.z + z);
+				// std::cout << "Size: " << map->chunks.size() << std::endl;
+
+				if (index < 0 || index > 32768)
+				{
+					std::cout << "Out of bounds!" << std::endl;
+					continue;
+				}
+
+				// If chunk is a null pointer then the chunk is air (and also doesn't exist)
+				if (map->chunks[index] != nullptr)
+				{
+					//if (map->chunks[index]->checkChunkIntersect(chunkStart.x + x, chunkStart.y + y, chunkStart.z + z, t_origin, t_direction, t_hitPoint))
+					//{
+					//	return true;
+					//}
+
+					Indices chunkIndex = { chunkStart.x + x, chunkStart.y + y, chunkStart.z + z };
+
+					if (map->chunks[index]->checkAllCubesIntersect(t_origin, t_direction, chunkIndex, m_hitInfo))
+					{
+						return true;
+					}
+				}				
+
+				// Tested and works
+				//std::cout << "Checking " << chunkStart.x + x << ", " << chunkStart.y + y << ", " << chunkStart.z + z << std::endl;
+			}
+		}
+	}
+
+	return false;
 }
 
 /// <summary>
@@ -638,55 +757,4 @@ void Game::renderTextureToQuad(GLuint &t_textureID)
 	glDisableVertexAttribArray(0);
 }
 
-/// <summary>
-/// Function to check if a cube is being intersected.
-/// </summary>
-/// <param name="t_origin">The ray's origin point.</param>
-/// <param name="t_direction">The ray's direction.</param>
-/// <param name="t_cubeCenter">The center of the cube being checked.</param>
-/// <returns>The near and far values.</returns>
-glm::vec2 Game::intersectCube(glm::vec3 t_origin, glm::vec3 t_direction, glm::vec4 t_cubeCenter)
-{
-	glm::vec3 f_cubeSize(0.5, 0.5, 0.5);
-	glm::vec3 f_cubeCenter = glm::vec3(t_cubeCenter.x, t_cubeCenter.y, t_cubeCenter.z);
 
-	glm::vec3 f_min = ((f_cubeCenter - f_cubeSize) - t_origin) / t_direction;
-	glm::vec3 f_max = ((f_cubeCenter + f_cubeSize) - t_origin) / t_direction;
-	glm::vec3 f_t1 = glm::min(f_min, f_max);
-	glm::vec3 f_t2 = glm::max(f_min, f_max);
-
-	float f_near = std::max(std::max(f_t1.x, f_t1.y), f_t1.z);
-	float f_far = std::min(std::min(f_t2.x, f_t2.y), f_t2.z);
-
-	return glm::vec2(f_near, f_far);
-}
-
-/// <summary>
-/// This function checks every cube in the world to see if a ray has intersected with it.
-/// Currently, this function is horrible and inefficient but will do for testing purposes.
-/// </summary>
-/// <param name="t_origin">The ray's origin point.</param>
-/// <param name="t_direction">The ray's direction.</param>
-/// <param name="t_hitInfo">Stores the information from the cube that was intersected.</param>
-/// <returns>True if an intersection has occurred.</returns>
-bool Game::checkAllCubesIntersect(glm::vec3 t_origin, glm::vec3 t_direction, HitInfo &t_hitInfo)
-{
-	float f_smallest = m_cube.instancingPositions.size();
-	bool f_found = false;
-
-	//for (int i = 0; i < m_voxelPositions.size(); i++)
-	//{
-	//	glm::vec2 f_lambda = intersectCube(t_origin, t_direction, m_voxelPositions[i]);
-
-	//	if (f_lambda.x > 0.0 && f_lambda.x < f_lambda.y && f_lambda.x < f_smallest)
-	//	{
-	//		t_hitInfo.m_lambda = f_lambda;
-	//		t_hitInfo.m_bi = i;
-	//		f_smallest = f_lambda.x;
-	//		m_selectedCube = m_voxelPositions[i];
-	//		f_found = true;			
-	//	}
-	//}
-
-	return f_found;
-}

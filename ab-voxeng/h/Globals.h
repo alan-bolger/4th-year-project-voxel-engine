@@ -5,6 +5,8 @@
 #ifndef GLOBALS_H
 #define GLOBALS_H
 
+#include "glm/glm.hpp"
+
 static unsigned int SCREEN_WIDTH;
 static unsigned int SCREEN_HEIGHT;
 
@@ -18,6 +20,13 @@ struct Indices
 	int x;
 	int y;
 	int z;
+};
+
+struct HitInfo
+{
+	int bi;
+	glm::vec2 lambda;
+	glm::vec3 center;
 };
 
 #endif // !GLOBALS_H
