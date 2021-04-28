@@ -120,7 +120,7 @@ public:
 			for (int x = 0; x < MAP_WIDTH; ++x)
 			{				
 				voxel(x, heightMap[x][y], y, 1); // Grass
-				voxel(x, waterMap[x][y], y, 2);// Water
+				voxel(x, waterMap[x][y], y, 2); // Water
 			}
 		}
 
@@ -129,7 +129,7 @@ public:
 	}
 
 	/// <summary>
-	/// Populates the map with voxels.
+	/// Populates the map with trees and such. Rocks too.
 	/// </summary>
 	/// <param name="heightMap">An array of height map values.</param>
 	void placeScenery(int treeMap[MAP_WIDTH][MAP_DEPTH])
@@ -199,8 +199,6 @@ public:
 					{
 						delete chunks[at(x, y, z)]; // Delete the empty chunk
 						chunks[at(x, y, z)] = nullptr; // Make pointer null
-
-						std::cout << "Chunk deleted" << std::endl;
 					}
 				}
 			}

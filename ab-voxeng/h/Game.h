@@ -52,6 +52,7 @@ private:
 	ab::Shader *m_computeShader;
 	ab::Shader *m_skyboxShader;
 	ab::Terrain *m_terrain;
+	SDL_Cursor *cursor;
 	ab::Model m_cube;
 	ab::Model m_waterBlock;
 	ab::Model m_treeBlock;

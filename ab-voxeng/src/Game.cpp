@@ -12,7 +12,9 @@ Game::Game(int t_width, int t_height)
 {
 	SCREEN_WIDTH = t_width;
 	SCREEN_HEIGHT = t_height;
+
 	m_window = SDL_CreateWindow("Voxel Engine [Alan Bolger]", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, t_width, t_height, SDL_WINDOW_OPENGL);
+
 	initialise();
 }
 
@@ -73,6 +75,10 @@ void Game::initialise()
 	// Initialise GLEW
 	glewExperimental = GL_TRUE;
 	auto init_res = glewInit();
+
+	cursor = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_CROSSHAIR);
+	SDL_SetCursor(cursor);
+	SDL_ShowCursor(1);
 
 	// Setup Dear ImGui context
 	IMGUI_CHECKVERSION();
