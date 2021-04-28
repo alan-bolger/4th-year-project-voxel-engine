@@ -52,6 +52,7 @@ private:
 	ab::Shader *m_computeShader;
 	ab::Shader *m_skyboxShader;
 	ab::Terrain *m_terrain;
+	SDL_Cursor *cursor;
 	ab::Model m_cube;
 	ab::Model m_waterBlock;
 	ab::Model m_treeBlock;
@@ -153,12 +154,10 @@ private:
 	void initialiseRaytracing();
 	void raytrace();
 	void renderTextureToQuad(GLuint &t_textureID);
-	glm::vec2 intersectCube(glm::vec3 t_origin, glm::vec3 t_direction, glm::vec4 t_cubeCenter);
-	bool checkAllCubesIntersect(glm::vec3 t_origin, glm::vec3 t_direction, HitInfo &t_hitInfo);
 	Indices getChunkXYZ(int x, int y, int z);
 	
 	// This is the function I'm currently using
-	bool checkForVoxelIntersections(glm::vec3 t_origin, glm::vec3 t_direction, int& t_x, int& t_y, int& t_z, glm::vec3& t_hitPoint);
+	bool checkForVoxelIntersections(glm::vec3 t_origin, glm::vec3 t_direction, glm::vec3& t_hitPoint);
 };
 
 #endif // !GAME_H

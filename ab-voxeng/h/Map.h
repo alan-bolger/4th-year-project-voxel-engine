@@ -63,7 +63,22 @@ public:
 		int voxZ = std::floor(z % 16);
 
 		int index = this->at(chunkX, chunkY, chunkZ);
+
+		if (chunks[index] == nullptr)
+		{
+			std::cout << "Creating chunk" << std::endl;
+			chunks[index] = new Chunk();
+		}
+
 		chunks[index]->voxels[chunks[index]->at(voxX, voxY, voxZ)] = type;
+				
+		if (chunks[index]->checkIsEmpty())
+		{
+			std::cout << "Deleting chunk" << std::endl;
+
+			delete chunks[index];
+			chunks[index] = nullptr;
+		}
 	}
 
 	/// <summary>
@@ -105,7 +120,7 @@ public:
 			for (int x = 0; x < MAP_WIDTH; ++x)
 			{				
 				voxel(x, heightMap[x][y], y, 1); // Grass
-				voxel(x, waterMap[x][y], y, 2);// Water
+				voxel(x, waterMap[x][y], y, 2); // Water
 			}
 		}
 
@@ -114,7 +129,7 @@ public:
 	}
 
 	/// <summary>
-	/// Populates the map with voxels.
+	/// Populates the map with trees and such. Rocks too.
 	/// </summary>
 	/// <param name="heightMap">An array of height map values.</param>
 	void placeScenery(int treeMap[MAP_WIDTH][MAP_DEPTH])
