@@ -19,8 +19,11 @@
     <Filter Include="ImGUI">
       <UniqueIdentifier>{9cdec935-d2c5-4ef4-adec-28d72da3cb24}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files\Map System">
+    <Filter Include="Header Files\World System">
       <UniqueIdentifier>{062f2f2c-fbde-4663-be11-9912e21d9b52}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\World System">
+      <UniqueIdentifier>{8368a4d1-9f83-4c21-b22a-94e152c1d9d5}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -75,6 +78,15 @@
     <ClCompile Include="libs\imgui\imgui_widgets.cpp">
       <Filter>ImGUI</Filter>
     </ClCompile>
+    <ClCompile Include="src\Chunk.cpp">
+      <Filter>Source Files\World System</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Map.cpp">
+      <Filter>Source Files\World System</Filter>
+    </ClCompile>
+    <ClCompile Include="src\World.cpp">
+      <Filter>Source Files\World System</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="h\Debug.h">
@@ -117,13 +129,13 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="h\Map.h">
-      <Filter>Header Files\Map System</Filter>
-    </ClInclude>
-    <ClInclude Include="h\Voxel.h">
-      <Filter>Header Files\Map System</Filter>
+      <Filter>Header Files\World System</Filter>
     </ClInclude>
     <ClInclude Include="h\Chunk.h">
-      <Filter>Header Files\Map System</Filter>
+      <Filter>Header Files\World System</Filter>
+    </ClInclude>
+    <ClInclude Include="h\World.h">
+      <Filter>Header Files\World System</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

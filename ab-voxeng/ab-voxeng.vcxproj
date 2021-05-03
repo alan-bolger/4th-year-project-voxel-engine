@@ -27,14 +27,17 @@
     <ClCompile Include="libs\imgui\imgui_tables.cpp" />
     <ClCompile Include="libs\imgui\imgui_widgets.cpp" />
     <ClCompile Include="src\Camera.cpp" />
+    <ClCompile Include="src\Chunk.cpp" />
     <ClCompile Include="src\Clock.cpp" />
     <ClCompile Include="src\Game.cpp" />
     <ClCompile Include="src\Main.cpp" />
+    <ClCompile Include="src\Map.cpp" />
     <ClCompile Include="src\ModelLoader.cpp" />
     <ClCompile Include="src\Noise.cpp" />
     <ClCompile Include="src\OpenGL.cpp" />
     <ClCompile Include="src\Shader.cpp" />
     <ClCompile Include="src\Terrain.cpp" />
+    <ClCompile Include="src\World.cpp" />
     <ClCompile Include="src\XboxOneController.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -52,7 +55,7 @@
     <ClInclude Include="h\Shader.h" />
     <ClInclude Include="h\stb_image.h" />
     <ClInclude Include="h\Terrain.h" />
-    <ClInclude Include="h\Voxel.h" />
+    <ClInclude Include="h\World.h" />
     <ClInclude Include="h\XboxOneController.h" />
   </ItemGroup>
   <ItemGroup>

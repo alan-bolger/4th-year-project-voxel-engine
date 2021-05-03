@@ -37,9 +37,6 @@ void ab::Terrain::initialise()
 /// <param name="t_height">The height of the map.</param>
 void ab::Terrain::generate(int t_width, int t_height)
 {
-	// Make sure the map is empty
-	// clear(m_boxes);
-
 	// Temporary storage for map values
 	std::vector<std::vector<float>> f_elevationMap;
 	std::vector<std::vector<float>> f_treeMap;

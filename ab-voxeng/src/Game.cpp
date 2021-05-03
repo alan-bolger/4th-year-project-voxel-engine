@@ -76,10 +76,6 @@ void Game::initialise()
 	glewExperimental = GL_TRUE;
 	auto init_res = glewInit();
 
-	cursor = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_CROSSHAIR);
-	SDL_SetCursor(cursor);
-	SDL_ShowCursor(1);
-
 	// Setup Dear ImGui context
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
@@ -156,39 +152,18 @@ void Game::initialise()
 	m_computeShader = new ab::Shader("shaders/raytracer.comp");
 	m_skyboxShader = new ab::Shader("shaders/skybox.vert", "shaders/skybox.frag");
 
-	// Terrain and map population
+	// Create height maps for use in map object
 	m_terrain = new ab::Terrain();
-	m_terrain->generate(MAP_WIDTH, MAP_DEPTH);
+	m_terrain->generate(WORLD_WIDTH, WORLD_DEPTH);
 
-	map = new Map();
-	map->populate(m_terrain->heightMap, m_terrain->treeMap, m_terrain->waterMap);
+	// Create map object and populate map using height maps
+	world = new World();
+	world->populate(m_terrain->heightMap, m_terrain->treeMap, m_terrain->waterMap);
 
 	delete m_terrain; // Don't need this anymore
 
-	updateEntireMap(); // This copies the voxel positions to the GPU
-
-	//int map_w = MAP_WIDTH / 16;
-	//int map_h = MAP_HEIGHT / 16;
-	//int map_d = MAP_DEPTH / 16;
-
-	//// Confirmation that chunks are empty or contain voxels
-	//for (int z = 0; z < map_d; ++z)
-	//{
-	//	for (int y = 0; y < map_h; ++y)
-	//	{
-	//		for (int x = 0; x < map_w; ++x)
-	//		{
-	//			if (map->chunks[map->at(x, y, z)] == nullptr)
-	//			{
-	//				std::cout << "Chunk [" << x << "][" << y << "][" << z << "] is empty!" << std::endl;
-	//			}
-	//			else
-	//			{
-	//				std::cout << "Chunk [" << x << "][" << y << "][" << z << "] contains voxels!" << std::endl;
-	//			}
-	//		}
-	//	}
-	//}
+	//world->optimiseWorldStorage();
+	updateEntireMap(); // This copies all map voxels to the GPU
 
 	// Load models
 	ab::OpenGL::import("models/generic-block.obj", m_cube, "models/grass-block.png");
@@ -275,26 +250,26 @@ void Game::processEvents()
 		// Handle left and right mouse button clicks
 		if (f_event.type == SDL_MOUSEBUTTONDOWN)
 		{
-			if (f_event.button.button == SDL_BUTTON_LEFT) // Add voxel
-			{
-				m_rayDirection = m_camera->getRayFromMousePos(m_mousePos.x, m_mousePos.y);
+			//if (f_event.button.button == SDL_BUTTON_LEFT) // Add voxel
+			//{
+			//	m_rayDirection = m_camera->getRayFromMousePos(m_mousePos.x, m_mousePos.y);
 
-				if (checkForVoxelIntersections(m_camera->getEye(), m_rayDirection, m_hitPoint))
-				{
-					map->voxel((int)m_hitInfo.center.x, (int)m_hitInfo.center.y + 1, (int)m_hitInfo.center.z, 1);
-					updateEntireMap();
-				}
-			}
-			else if (f_event.button.button == SDL_BUTTON_RIGHT) // Delete voxel
-			{
-				m_rayDirection = m_camera->getRayFromMousePos(m_mousePos.x, m_mousePos.y);
+			//	if (checkForVoxelIntersections(m_camera->getEye(), m_rayDirection, m_hitPoint))
+			//	{
+			//		world->setVoxel((int)m_hitInfo.center.x, (int)m_hitInfo.center.y, (int)m_hitInfo.center.z, 0);
+			//		updateEntireMap();
+			//	}
+			//}
+			//else if (f_event.button.button == SDL_BUTTON_RIGHT) // Delete voxel
+			//{
+			//	m_rayDirection = m_camera->getRayFromMousePos(m_mousePos.x, m_mousePos.y);
 
-				if (checkForVoxelIntersections(m_camera->getEye(), m_rayDirection, m_hitPoint))
-				{
-					map->voxel((int)m_hitInfo.center.x, (int)m_hitInfo.center.y, (int)m_hitInfo.center.z, 0);
-					updateEntireMap();
-				}
-			}
+			//	if (checkForVoxelIntersections(m_camera->getEye(), m_rayDirection, m_hitPoint))
+			//	{
+			//		map->voxel((int)m_hitInfo.center.x, (int)m_hitInfo.center.y, (int)m_hitInfo.center.z, 0);
+			//		updateEntireMap();
+			//	}
+			//}
 		}
 
 		m_controller->processEvents(f_event);
@@ -518,9 +493,10 @@ int Game::getChunkIndex(int x, int y, int z)
 
 void Game::updateEntireMap()
 {
-	int map_w = MAP_WIDTH / 16;
-	int map_h = MAP_HEIGHT / 16;
-	int map_d = MAP_DEPTH / 16;
+	// Find out how many maps are in the world
+	int world_w = WORLD_WIDTH / MAP_WIDTH;
+	int world_h = WORLD_HEIGHT / MAP_HEIGHT;
+	int world_d = WORLD_DEPTH / MAP_DEPTH;
 
 	if (m_cube.instancingPositions.size() > 0)
 	{
@@ -542,48 +518,62 @@ void Game::updateEntireMap()
 		m_leafBlock.instancingPositions.clear();
 	}
 
-	for (int z = 0; z < map_d; ++z)
+	for (int wZ = 0; wZ < world_d; ++wZ)
 	{
-		for (int y = 0; y < map_h; ++y)
+		for (int wY = 0; wY < world_h; ++wY)
 		{
-			for (int x = 0; x < map_w; ++x)
+			for (int wX = 0; wX < world_w; ++wX)
 			{
-				if (map->chunks[map->at(x, y, z)] == nullptr) // Don't check empty chunks
+				if (world->maps[Utility::at(wX, wY, wZ, world_h, world_d)] == nullptr) // Don't check empty maps
 				{
 					continue;
 				}
 				else
 				{
-					for (int vZ = 0; vZ < 16; ++vZ)
+					for (int mZ = 0; mZ < MAP_WIDTH / CHUNK_WIDTH; ++mZ)
 					{
-						for (int vY = 0; vY < 16; ++vY)
+						for (int mY = 0; mY < MAP_HEIGHT / CHUNK_HEIGHT; ++mY)
 						{
-							for (int vX = 0; vX < 16; ++vX)
+							for (int mX = 0; mX < MAP_DEPTH / CHUNK_DEPTH; ++mX)
 							{
-								int chunkIndex = map->at(x, y, z);
-								int voxelIndex = map->chunks[chunkIndex]->at(vX, vY, vZ);
-								char* voxel = &map->chunks[chunkIndex]->voxels[voxelIndex];
-
-								if (*voxel == 0) // Air
+								if (world->maps[Utility::at(wX, wY, wZ, world_h, world_d)]->chunks[Utility::at(mX, mY, mZ, MAP_HEIGHT / CHUNK_HEIGHT, MAP_DEPTH / CHUNK_DEPTH)] == nullptr) // Don't check empty chunks
 								{
 									continue;
 								}
+								else
+								{
+									for (int cZ = 0; cZ < CHUNK_DEPTH; ++cZ)
+									{
+										for (int cY = 0; cY < CHUNK_HEIGHT; ++cY)
+										{
+											for (int cX = 0; cX < CHUNK_WIDTH; ++cX)
+											{
+												char *voxel = &world->maps[Utility::at(wX, wY, wZ, world_h, world_d)]->chunks[Utility::at(mX, mY, mZ, MAP_HEIGHT / CHUNK_HEIGHT, MAP_DEPTH / CHUNK_DEPTH)]->voxels[Utility::at(cX, cY, cZ, CHUNK_HEIGHT, CHUNK_DEPTH)];
 
-								if (*voxel == 1) // Grass
-								{
-									m_cube.instancingPositions.push_back(glm::translate(glm::mat4(1.0f), glm::vec3(x * 16 + vX, y * 16 + vY, z * 16 + vZ)));
-								}
-								else if (*voxel == 2) // Water
-								{
-									m_waterBlock.instancingPositions.push_back(glm::translate(glm::mat4(1.0f), glm::vec3(x * 16 + vX, y * 16 + vY, z * 16 + vZ)));
-								}
-								else if (*voxel == 3) // Tree
-								{
-									m_treeBlock.instancingPositions.push_back(glm::translate(glm::mat4(1.0f), glm::vec3(x * 16 + vX, y * 16 + vY, z * 16 + vZ)));
-								}
-								else if (*voxel == 4) // Leaf
-								{
-									m_leafBlock.instancingPositions.push_back(glm::translate(glm::mat4(1.0f), glm::vec3(x * 16 + vX, y * 16 + vY, z * 16 + vZ)));
+												if (*voxel == 0) // Air
+												{
+													continue;
+												}
+
+												if (*voxel == 1) // Grass
+												{
+													m_cube.instancingPositions.push_back(glm::translate(glm::mat4(1.0f), glm::vec3((wX * MAP_WIDTH) + (mX * CHUNK_WIDTH) + cX, (wY * MAP_HEIGHT) + (mY * CHUNK_HEIGHT) + cY, (wZ * MAP_DEPTH) + (mZ * CHUNK_DEPTH) + cZ)));
+												}
+												else if (*voxel == 2) // Water
+												{
+													m_waterBlock.instancingPositions.push_back(glm::translate(glm::mat4(1.0f), glm::vec3((wX * MAP_WIDTH) + (mX * CHUNK_WIDTH) + cX, (wY * MAP_HEIGHT) + (mY * CHUNK_HEIGHT) + cY, (wZ * MAP_DEPTH) + (mZ * CHUNK_DEPTH) + cZ)));
+												}
+												else if (*voxel == 3) // Tree
+												{
+													m_treeBlock.instancingPositions.push_back(glm::translate(glm::mat4(1.0f), glm::vec3((wX * MAP_WIDTH) + (mX * CHUNK_WIDTH) + cX, (wY * MAP_HEIGHT) + (mY * CHUNK_HEIGHT) + cY, (wZ * MAP_DEPTH) + (mZ * CHUNK_DEPTH) + cZ)));
+												}
+												else if (*voxel == 4) // Leaf
+												{
+													m_leafBlock.instancingPositions.push_back(glm::translate(glm::mat4(1.0f), glm::vec3((wX * MAP_WIDTH) + (mX * CHUNK_WIDTH) + cX, (wY * MAP_HEIGHT) + (mY * CHUNK_HEIGHT) + cY, (wZ * MAP_DEPTH) + (mZ * CHUNK_DEPTH) + cZ)));
+												}
+											}
+										}
+									}
 								}
 							}
 						}
@@ -619,49 +609,45 @@ bool Game::checkForVoxelIntersections(glm::vec3 t_origin, glm::vec3 t_direction,
 	// Only check neighbouring chunks for intersections
 	glm::vec3 worldPosition = m_camera->getEye();
 
+	// This is the chunk to start checking at
 	Indices chunkStart = getChunkXYZ(worldPosition.x, worldPosition.y, worldPosition.z);
 
-	// Set chunk starting [x, y, z]
+	// Set chunk starting point [x, y, z]
 	chunkStart.x--;
 	chunkStart.y--;
 	chunkStart.z--;
 
-	// std::cout << "Chunk index: [" << chunkStart.x << ", " << chunkStart.y << ", " << chunkStart.z << "]" << std::endl;
+	// Get chunk map array dimensions
+	int map_w = MAP_WIDTH / CHUNK_WIDTH;
+	int map_d = MAP_DEPTH / CHUNK_DEPTH;
+	
+	//// Check all the immediate chunks around you (including the one you're in)
+	//for (int z = 0; z < 3; ++z)
+	//{
+	//	for (int y = 0; y < 3; ++y)
+	//	{
+	//		for (int x = 0; x < 3; ++x)
+	//		{
+	//			int index = Utility::at(chunkStart.x + x, chunkStart.y + y, chunkStart.z + z, map_w, map_d);
 
-	// Check all the immediate chunks around you (and the one you're in)
-	for (int z = 0; z < 3; ++z)
-	{
-		for (int y = 0; y < 3; ++y)
-		{
-			for (int x = 0; x < 3; ++x)
-			{
-				//int chunk = getChunkIndex(chunkStart.x + x, chunkStart.y + y, chunkStart.z + z);
-				//std::cout << chunk << std::endl;
+	//			if (index < 0 || index > map->chunks.size())
+	//			{
+	//				continue; // If chunk is out of bounds then go to next iteration
+	//			}
 
-				int index = map->at(chunkStart.x + x, chunkStart.y + y, chunkStart.z + z);
-				// std::cout << "Size: " << map->chunks.size() << std::endl;
+	//			// If chunk is a null pointer then the chunk is air (and also doesn't exist)
+	//			if (map->chunks[index] != nullptr)
+	//			{
+	//				Indices chunkIndex = { chunkStart.x + x, chunkStart.y + y, chunkStart.z + z };
 
-				if (index < 0 || index > map->chunks.size())
-				{
-					continue; // If chunk is out of bounds then go to next iteration
-				}
-
-				// If chunk is a null pointer then the chunk is air (and also doesn't exist)
-				if (map->chunks[index] != nullptr)
-				{
-					Indices chunkIndex = { chunkStart.x + x, chunkStart.y + y, chunkStart.z + z };
-
-					if (map->chunks[index]->checkAllCubesIntersect(t_origin, t_direction, chunkIndex, m_hitInfo))
-					{
-						return true;
-					}
-				}				
-
-				// Tested and works
-				//std::cout << "Checking " << chunkStart.x + x << ", " << chunkStart.y + y << ", " << chunkStart.z + z << std::endl;
-			}
-		}
-	}
+	//				if (map->chunks[index]->checkAllCubesIntersect(t_origin, t_direction, chunkIndex, m_hitInfo))
+	//				{
+	//					return true;
+	//				}
+	//			}
+	//		}
+	//	}
+	//}
 
 	return false;
 }
