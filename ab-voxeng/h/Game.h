@@ -16,6 +16,7 @@
 #include "glm/glm.hpp"
 #include "glm/gtc/matrix_transform.hpp"
 #include "SDL.h"
+#include "SDL_syswm.h"
 #include "SDL_opengl.h"
 #include "SDL_image.h"
 #include "SDL_ttf.h"
@@ -28,7 +29,7 @@
 #include "XboxOneController.h"
 #include "Terrain.h"
 #include "Debug.h"
-#include "Map.h"
+#include "World.h"
 
 class Game
 {
@@ -69,7 +70,7 @@ private:
 	int m_comboType = 0;
 	bool m_raytracingOn = false;
 	bool m_instanceArrayUpdated = false;
-	Map *map;
+	World *world;
 
 	// Quad for render to texture
 	GLuint m_quadVertexArrayObjectID;

@@ -1,43 +1,36 @@
 // *******************************
 // * Chunk.h - Alan Bolger, 2020 *
 // *******************************
-// Chunks store voxels (For now, hehe). A voxel is represented by a byte (char) because it is smol.
-//
-// 0 = AIR
-// 1 = GRASS
-// 2 = WATER
-// 3 - TREE
-// 4 - LEAF
-//
-// Yeah, so that's it. Bye.
 
 #ifndef CHUNK_H
 #define CHUNK_H
 
-#include "Voxel.h"
+#include <vector>
 
 class Chunk
 {
 public:
 	Chunk()
 	{
-		int x = 16;
-		int y = 16;
-		int z = 16;
-		int size = x * y * z;
+		// Set chunk dimensions
+		int x = CHUNK_WIDTH;
+		int y = CHUNK_HEIGHT;
+		int z = CHUNK_DEPTH;
+
+		int size = x * y * z; // Array size
 
 		voxels.resize(size);
 
 		for (unsigned int i = 0; i < size; ++i)
 		{
-			voxels[i] = 0; // 0 is air
+			voxels[i] = 0; // Initialise chunk with air
 		}
-	};
+	}
 
 	~Chunk()
 	{
 
-	};
+	}
 
 	/// <summary>
 	/// Checks the chunk to see if it's empty.
@@ -45,13 +38,14 @@ public:
 	/// <returns>True if the chunk is empty.</returns>
 	bool checkIsEmpty()
 	{
-		for (int z = 0; z < 16; ++z)
+		for (int z = 0; z < CHUNK_DEPTH; ++z)
 		{
-			for (int y = 0; y < 16; ++y)
+			for (int y = 0; y < CHUNK_HEIGHT; ++y)
 			{
-				for (int x = 0; x < 16; ++x)
+				for (int x = 0; x < CHUNK_WIDTH; ++x)
 				{
-					if (voxels[at(x, y, z)] != 0)
+					// If any of the blocks are not air then the chunk isn't empty
+					if (voxels[Utility::at(x, y, z, CHUNK_HEIGHT, CHUNK_DEPTH)] != 0)
 					{
 						return false;						
 					}
@@ -63,41 +57,7 @@ public:
 	};
 
 	/// <summary>
-	/// Use this to convert a 3D array index value into a 1D array index value.
-	/// </summary>
-	/// <param name="x">The X value.</param>
-	/// <param name="y">The Y value.</param>
-	/// <param name="z">The Z value.</param>
-	/// <returns>A 1D array index value.</returns>
-	int at(int x, int y, int z)
-	{
-		int map_h = 16;
-		int map_d = 16;
-
-		return x * map_h * map_d + y * map_d + z;
-	}
-
-	/// <summary>
-	/// Use this to convert a 1D array index value into a 3D array index value.
-	/// </summary>
-	/// <param name="i">The 1D index value.</param>
-	/// <returns>A 3D array index value.</returns>
-	Indices at(int i)
-	{
-		int map_h = 16;
-		int map_d = 16;
-
-		Indices indices;
-		indices.x = i / (map_h * map_d);
-		indices.y = (i - indices.x * map_h * map_d) / map_d;
-		indices.z = i - indices.x * map_h * map_d - indices.y * map_d;
-
-		return indices;
-	}
-
-	/// <summary>
-	/// This function checks every cube in the world to see if a ray has intersected with it.
-	/// Currently, this function is horrible and inefficient but will do for testing purposes.
+	/// This function checks every voxel / cube in the chunk for a ray intersect.
 	/// </summary>
 	/// <param name="t_origin">The ray's origin point.</param>
 	/// <param name="t_direction">The ray's direction.</param>
@@ -114,7 +74,7 @@ public:
 			{
 				for (int x = 0; x < 16; ++x)
 				{
-					if (voxels[at(x, y, z)] != 1)
+					if (voxels[Utility::at(x, y, z, CHUNK_HEIGHT, CHUNK_WIDTH)] != 1)
 					{
 						continue;
 					}
@@ -136,7 +96,7 @@ public:
 	}
 
 	/// <summary>
-	/// Function to check if a cube is being intersected.
+	/// Function to check if a voxel / cube is being intersected.
 	/// </summary>
 	/// <param name="t_origin">The ray's origin point.</param>
 	/// <param name="t_direction">The ray's direction.</param>

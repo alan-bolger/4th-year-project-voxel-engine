@@ -14,23 +14,14 @@
 #include <vector>
 #include <random>
 
-struct Box
-{
-	glm::vec3 center;
-	glm::vec3 colour;
-};
-
 namespace ab
 {
 	class Terrain
 	{
 	public:
-		//static const int MAP_WIDTH = 256;
-		//static const int MAP_HEIGHT = 256;
-		// Box m_boxes[MAP_HEIGHT][MAP_WIDTH];
-		int heightMap[MAP_WIDTH][MAP_DEPTH];
-		int waterMap[MAP_WIDTH][MAP_DEPTH];
-		int treeMap[MAP_WIDTH][MAP_DEPTH];
+		int heightMap[WORLD_WIDTH][WORLD_DEPTH];
+		int waterMap[WORLD_WIDTH][WORLD_DEPTH];
+		int treeMap[WORLD_WIDTH][WORLD_DEPTH];
 
 		Terrain();
 		~Terrain();
