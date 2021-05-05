@@ -16,7 +16,8 @@ out vec3 normal;
 void main()
 {
     texCoords = aTexCoords;
-    fragPos = vec3(matrixInstance * vec4(aPos, 1.0));
+    fragPos = vec3(matrixInstance * vec4(aPos, 1.0)); // Uncomment this for instancing
+    // fragPos = vec3(model * vec4(aPos, 1.0)); // Used for individual draw calls
     normal = transpose(inverse(mat3(matrixInstance))) * aNormal;
     gl_Position = projection * view * vec4(fragPos, 1.0);
 } 

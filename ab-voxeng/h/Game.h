@@ -30,6 +30,7 @@
 #include "Terrain.h"
 #include "Debug.h"
 #include "World.h"
+#include "Timer.h" // Thanks to Paul O' Callaghan for this!
 
 class Game
 {
@@ -39,7 +40,7 @@ public:
 	void start();
 
 private:
-	HitInfo m_hitInfo;
+	HitInfo m_hitInfo; // Used for ray casting
 
 	SDL_Window *m_window;
 	SDL_GLContext m_glContext;
@@ -156,8 +157,6 @@ private:
 	void raytrace();
 	void renderTextureToQuad(GLuint &t_textureID);
 	Indices getChunkXYZ(int x, int y, int z);
-	
-	// This is the function I'm currently using
 	bool checkForVoxelIntersections(glm::vec3 t_origin, glm::vec3 t_direction, glm::vec3& t_hitPoint);
 };
 

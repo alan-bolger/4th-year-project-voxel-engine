@@ -37,6 +37,7 @@
     <ClCompile Include="src\OpenGL.cpp" />
     <ClCompile Include="src\Shader.cpp" />
     <ClCompile Include="src\Terrain.cpp" />
+    <ClCompile Include="src\Timer.cpp" />
     <ClCompile Include="src\World.cpp" />
     <ClCompile Include="src\XboxOneController.cpp" />
   </ItemGroup>
@@ -55,6 +56,7 @@
     <ClInclude Include="h\Shader.h" />
     <ClInclude Include="h\stb_image.h" />
     <ClInclude Include="h\Terrain.h" />
+    <ClInclude Include="h\Timer.h" />
     <ClInclude Include="h\World.h" />
     <ClInclude Include="h\XboxOneController.h" />
   </ItemGroup>
@@ -135,8 +137,8 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <LibraryPath>$(ProjectDir)\libs\glew;$(ProjectDir)\libs\SDL2;$(LibraryPath)</LibraryPath>
-    <IncludePath>$(ProjectDir)\libs;$(ProjectDir)\sdl2_image\include;$(ProjectDir)\sdl2_ttf\include;$(ProjectDir)\imgui\backends;$(ProjectDir)\imgui;$(ProjectDir)\sdl2\include;$(ProjectDir)\libs\octree;$(ProjectDir)\h;$(IncludePath)</IncludePath>
+    <LibraryPath>$(LibraryPath)</LibraryPath>
+    <IncludePath>$(ProjectDir)\h;$(IncludePath)</IncludePath>
     <SourcePath>$(ProjectDir)\src;$(SourcePath)</SourcePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -200,6 +202,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>SDL2.lib;SDL2main.lib;SDL2_ttf.lib;SDL2_image.lib;opengl32.lib;glew32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(ProjectDir)\libs\glew;$(ProjectDir)\libs\SDL2;</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

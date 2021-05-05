@@ -28,6 +28,9 @@ ab::Terrain::~Terrain()
 void ab::Terrain::initialise()
 {
 	m_noise = new Noise();
+
+	// This seed can be used to regenerate the exact same world every time
+	std::srand(12345);
 }
 
 /// <summary>
@@ -44,6 +47,9 @@ void ab::Terrain::generate(int t_width, int t_height)
 	// Initialise arrays
 	f_elevationMap.resize(t_width, std::vector<float>(t_height));
 	f_treeMap.resize(t_width, std::vector<float>(t_height));
+
+	// Create random values using seed
+	float val_1 = rand() % 9 + 1;
 
 	// Generate terrain
 	for (int y = 0; y < t_height; ++y)
@@ -62,9 +68,9 @@ void ab::Terrain::generate(int t_width, int t_height)
 				+ 0.06f * m_noise->noise(16.0 * (double)freqX, 16.0 * (double)freqY)
 				+ 0.03f * m_noise->noise(32.0 * (double)freqX, 32.0 * (double)freqY));
 
-			e /= (1.00 + 0.50 + 0.25 + 0.13 + 0.06 + 0.03);
-			e = (1 + e - distance) / 2;
-			e = pow(e, 4.0);
+			e /= (3.00 + 0.50 + 0.25 + 0.13 + 0.06 + 0.03);
+			//e = (1 + e - distance) / 2; // Uncommenting this line will produce maps like islands
+			e = pow(e, EXP);
 			f_elevationMap[x][y] = e;
 		}
 	}

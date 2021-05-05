@@ -87,6 +87,9 @@
     <ClCompile Include="src\World.cpp">
       <Filter>Source Files\World System</Filter>
     </ClCompile>
+    <ClCompile Include="src\Timer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="h\Debug.h">
@@ -136,6 +139,9 @@
     </ClInclude>
     <ClInclude Include="h\World.h">
       <Filter>Header Files\World System</Filter>
+    </ClInclude>
+    <ClInclude Include="h\Timer.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

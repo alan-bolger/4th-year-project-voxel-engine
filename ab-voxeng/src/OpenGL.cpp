@@ -33,7 +33,7 @@ void ab::OpenGL::import(const char *t_modelFilename, ab::Model &t_model, std::st
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 
-		// TODO: Mipmapping - needs to be adjusted, causing rendering artifacts
+		// Mipmapping (Disable if you're getting strange graphical artifacts)
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
@@ -52,7 +52,7 @@ void ab::OpenGL::import(const char *t_modelFilename, ab::Model &t_model, std::st
 	// Load OBJ file
 	if (!ab::ModelLoader::loadOBJ(t_modelFilename, t_model.vertices, t_model.uvs, t_model.normals, t_model.indices))
 	{
-		std::cout << "Error loading model!" << std::endl;
+		std::cout << "Error loading model " << t_modelFilename << std::endl;
 	}
 
 	// This VAO stores all draw states below
@@ -176,6 +176,7 @@ GLuint ab::OpenGL::createFBO(GLsizei t_width, GLsizei t_height)
 /// <summary>
 /// Loads a cube map and assigns a texture ID.
 /// Cube map always uses GL_TEXTURE11
+/// Images should be in the array in the following order: Right, left, up, down, back, front
 /// </summary>
 /// <param name="t_faces">An array of images to display on the cube.</param>
 /// <param name="t_textureID">The active texture.</param>
