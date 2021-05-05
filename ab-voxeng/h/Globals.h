@@ -25,11 +25,14 @@ static const int MAP_WIDTH = 256;
 static const int MAP_HEIGHT = 128;
 static const int MAP_DEPTH = 256;
 static const int WATER_HEIGHT = 1;
+static const float EXP = 4.0f; // This adjusts hills and valleys
+static const bool DAYTIME = true; // Set this to false for night
 
 // This is the size of a chunk in voxels
 static const int CHUNK_WIDTH = 16;
 static const int CHUNK_HEIGHT = 16;
 static const int CHUNK_DEPTH = 16;
+
 
 // Simple struct for storing array [x, y, z] index values
 struct Indices

@@ -21,9 +21,6 @@ ab::Noise::~Noise()
 /// </summary>
 void ab::Noise::initialise()
 {
-	// This seed can be used to regenerate the exact same world every time
-	std::srand(12345);
-
 	for (int i = 0; i < 512; i++)
 	{
 		perm[i] = p[i & 255]; 
@@ -31,7 +28,7 @@ void ab::Noise::initialise()
 }
 
 /// <summary>
-/// Floor function (faster than the standard floor function).
+/// Floor function (faster than the standard floor function!).
 /// </summary>
 /// <returns>The result of the floor function.</returns>
 int ab::Noise::fastFloor(double t_x)
@@ -175,7 +172,7 @@ double ab::Noise::noise(double t_xin, double t_yin)
 	// Add contributions from each corner to get the final noise value
 	// The result is scaled to return values in the interval [0, 1]
 	float v = 70.0f * (n0 + n1 + n2);
-	return normaliseToRange(v, 0, 1);
+	return normaliseToRange(v, -1, 1);	 
 }
 
 /// <summary>

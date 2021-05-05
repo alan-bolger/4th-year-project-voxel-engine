@@ -21,8 +21,8 @@ struct directionalLight
 
 directionalLight light;
 
-#define MAX_SCENE_BOUNDS 50.0
-#define NUM_BOXES 65536 / 2
+#define MAX_SCENE_BOUNDS 1000.0
+#define NUM_BOXES 500000
 
 vec3 cubeSize = vec3(0.5, 0.5, 0.5);
 

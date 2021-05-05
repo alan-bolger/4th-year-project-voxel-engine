@@ -14,10 +14,8 @@ Map::Map()
 	// Set all pointers to null
 	for (unsigned int i = 0; i < size; ++i)
 	{
-		chunks[i] = nullptr;
+		chunks[i] = new Chunk();
 	}
-
-	std::cout << "Constructing Map object" << std::endl;
 }
 
 Map::~Map()
@@ -169,68 +167,18 @@ void Map::populate(int heightMap[MAP_WIDTH][MAP_DEPTH], int treeMap[MAP_WIDTH][M
 	{
 		for (int x = 0; x < MAP_WIDTH; ++x)
 		{
-			setVoxel(x, heightMap[x][y] + 48, y, 1); // Grass
-			setVoxel(x, waterMap[x][y] + 48, y, 2); // Water
+			setVoxel(x, heightMap[x][y], y, 1); // Grass
+			setVoxel(x, waterMap[x][y], y, 2); // Water
 		}
 	}
 
-	// placeScenery(treeMap, worldSize); // Place trees
 	checkAllChunks(); // Check for empty chunks
 }
 
 /// <summary>
-/// Populates the map with trees
+/// This function checks to see if a chunk is empty.
+/// If the chunk is empty it will be deleted.
 /// </summary>
-/// <param name="heightMap">An array of height map values.</param>
-void Map::placeScenery(int treeMap[MAP_WIDTH][MAP_DEPTH], Indices worldSize)
-{
-	for (int y = 0; y < MAP_DEPTH; ++y)
-	{
-		for (int x = 0; x < MAP_WIDTH; ++x)
-		{
-			if (treeMap[x][y] == 0) // 0 means no tree
-			{
-				continue;
-			}
-
-			// Generate slightly random values for the tree height and tree top size
-			int f_treeHeight = rand() % 7 + 4;
-			int f_treeTopScale = rand() % 4 + 4;
-
-			// Creates tree trunk
-			for (int i = 0; i < f_treeHeight; i++)
-			{
-				setVoxel(x, treeMap[x][y] + 48 + i, y, 3); // Tree
-			}
-
-			int yBegin = treeMap[x][y] + f_treeHeight;
-
-			// Creates a pointy tree top of a random size
-			int modifier = 0;
-
-			for (int height = yBegin; height < yBegin + f_treeTopScale + 1; ++height)
-			{
-				for (int depth = y - f_treeTopScale + modifier; depth < y + f_treeTopScale - modifier + 1; ++depth)
-				{
-					for (int width = x - f_treeTopScale + modifier; width < x + f_treeTopScale - modifier + 1; ++width)
-					{
-						// Because voxels can only be placed within the boundaries of the current map,
-						// tree tops can sometimes end up generating over the edge of
-						// the current map and into another. This will result in the tree being sliced vertically
-						// where the map's edge is. To overcome this, a function pointer is binded to the setVoxel()
-						// function from the World class. This function allows voxels to be placed anywhere in the
-						// world and on any map.
-						setVoxel(width * worldSize.x, height * worldSize.y + 48, depth * worldSize.z, 4); // Leaf
-						//std::cout << width * worldSize.x << ", " << height * worldSize.y + 48 << ", " << depth * worldSize.z << std::endl;
-					}
-				}
-
-				modifier += 1;
-			}
-		}
-	}
-}
-
 void Map::checkAllChunks()
 {
 	// Find out how many chunks will fit in the map

@@ -10,10 +10,16 @@
 /// <param name="t_height">The height of the window.</param>
 Game::Game(int t_width, int t_height) 
 {
+	std::srand(12345); // This needs to be manually entered
+
 	SCREEN_WIDTH = t_width;
 	SCREEN_HEIGHT = t_height;
 
-	m_window = SDL_CreateWindow("Voxel Engine [Alan Bolger]", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, t_width, t_height, SDL_WINDOW_OPENGL);
+	m_window = SDL_CreateWindow("Voxel-Based Map Generator [Alan Bolger]", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, t_width, t_height, SDL_WINDOW_OPENGL);
+
+	// This is total nonsense, doesn't work properly (shows for about 2 seconds on load then vanishes)
+	cursor = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_CROSSHAIR);
+	SDL_SetCursor(cursor);
 
 	initialise();
 }
@@ -162,7 +168,7 @@ void Game::initialise()
 
 	delete m_terrain; // Don't need this anymore
 
-	//world->optimiseWorldStorage();
+	world->optimiseWorldStorage();	
 	updateEntireMap(); // This copies all map voxels to the GPU
 
 	// Load models
@@ -172,27 +178,35 @@ void Game::initialise()
 	ab::OpenGL::import("models/generic-block.obj", m_leafBlock, "models/leaf-block.png");
 
 	// Load cube map for skybox
-	std::vector<std::string> f_faces
+
+	if (DAYTIME)
 	{
-		"models/alpha_island/alpha_island_rt.tga",
-		"models/alpha_island/alpha_island_lf.tga",
-		"models/alpha_island/alpha_island_up.tga",
-		"models/alpha_island/alpha_island_dn.tga",
-		"models/alpha_island/alpha_island_bk.tga",
-		"models/alpha_island/alpha_island_ft.tga"
-	};
+		std::vector<std::string> f_faces
+		{
+			"models/alpha_island/alpha_island_rt.tga",
+			"models/alpha_island/alpha_island_lf.tga",
+			"models/alpha_island/alpha_island_up.tga",
+			"models/alpha_island/alpha_island_dn.tga",
+			"models/alpha_island/alpha_island_bk.tga",
+			"models/alpha_island/alpha_island_ft.tga"
+		};
 
-	//std::vector<std::string> f_faces
-	//{
-	//	"models/stratosphere/stratosphere_rt.tga",
-	//	"models/stratosphere/stratosphere_lf.tga",
-	//	"models/stratosphere/stratosphere_up.tga",
-	//	"models/stratosphere/stratosphere_dn.tga",
-	//	"models/stratosphere/stratosphere_bk.tga",
-	//	"models/stratosphere/stratosphere_ft.tga"
-	//};
+		m_cubeMapTextureID = ab::OpenGL::loadSkyBoxCubeMap(f_faces);
+	}
+	else
+	{
+		std::vector<std::string> f_faces
+		{
+			"models/stratosphere/stratosphere_rt.tga",
+			"models/stratosphere/stratosphere_lf.tga",
+			"models/stratosphere/stratosphere_up.tga",
+			"models/stratosphere/stratosphere_dn.tga",
+			"models/stratosphere/stratosphere_bk.tga",
+			"models/stratosphere/stratosphere_ft.tga"
+		};
 
-	m_cubeMapTextureID = ab::OpenGL::loadSkyBoxCubeMap(f_faces);
+		m_cubeMapTextureID = ab::OpenGL::loadSkyBoxCubeMap(f_faces);
+	}	
 
 	// Raytracing stuff
 	m_FBOtextureID = ab::OpenGL::createFBO(1280, 720);
@@ -325,29 +339,6 @@ void Game::update(double t_deltaTime)
 	ImGui::InputFloat("Y pos", &m_selectedCube.y);
 	ImGui::InputFloat("Z pos", &m_selectedCube.z);
 	ImGui::Separator();
-	//ImGui::BulletText("Array Element Index");
-	//ImGui::Text("Index: %i", m_hitInfo.m_bi);
-	//ImGui::Separator();
-	//ImGui::BulletText("Raycast Hit");
-	//ImGui::InputFloat("X pos", &m_hitPoint.x);
-	//ImGui::InputFloat("Y pos", &m_hitPoint.y);
-	//ImGui::InputFloat("Z pos", &m_hitPoint.z);
-	//ImGui::Separator();
-	//ImGui::Separator();
-	//ImGui::Separator();
-
-	// Camera
-	ImGui::Text("CAMERA");
-	//ImGui::Separator();
-	//ImGui::BulletText("Position");
-	//ImGui::InputFloat("X pos", &m_cameraEye.x);
-	//ImGui::InputFloat("Y pos", &m_cameraEye.y);
-	//ImGui::InputFloat("Z pos", &m_cameraEye.z);
-
-	//if (ImGui::Button("SET POSITION"))
-	//{
-	//	m_camera->setEye(m_cameraEye);
-	//}
 
 	//ImGui::Separator();
 	ImGui::BulletText("Current Position");
@@ -381,7 +372,6 @@ void Game::update(double t_deltaTime)
 
 	// Graphics settings
 	ImGui::Checkbox("Wireframe Mode (only works with rasterization)", &m_wireframeMode);
-	//ImGui::Checkbox("Raytracing On (deactivates rasterization)", &m_raytracingOn); // This breaks everything for some reason, but only if you do it during runtime - Activate at complile time and it's fine (but super slow)
 	ImGui::End();
 
 	// Update lighting parameters	
@@ -419,15 +409,16 @@ void Game::draw()
 			m_instanceArrayUpdated = false;
 		}
 
-		// Draw voxels
-		//ab::OpenGL::uniformMatrix4fv(*m_mainShader, "model", &m_cube.matrix[0][0]);
+		// Send camera position to shader
 		ab::OpenGL::uniform3f(*m_mainShader, "viewPosition", m_camera->getEye().x, m_camera->getEye().y, m_camera->getEye().z);
+
+		// Draw cubes using instancing
 		ab::OpenGL::draw(m_cube, m_mainShader, "diffuseTexture");
 		ab::OpenGL::draw(m_waterBlock, m_mainShader, "diffuseTexture");
 		ab::OpenGL::draw(m_treeBlock, m_mainShader, "diffuseTexture");
 		ab::OpenGL::draw(m_leafBlock, m_mainShader, "diffuseTexture");
 
-		if (true) // Yeah, wtf
+		if (true) // TODO: Add this to ImGUI as an option
 		{
 			glDepthFunc(GL_LEQUAL);
 
@@ -491,6 +482,9 @@ int Game::getChunkIndex(int x, int y, int z)
 	return indices.x * map_h * map_d + indices.y * map_d + indices.z;
 }
 
+/// <summary>
+/// Adds voxel positions ALL arrays that are to be sent to the GPU.
+/// </summary>
 void Game::updateEntireMap()
 {
 	// Find out how many maps are in the world
@@ -552,24 +546,52 @@ void Game::updateEntireMap()
 
 												if (*voxel == 0) // Air
 												{
-													continue;
+													continue; // Break from current loop if voxel is air
 												}
 
 												if (*voxel == 1) // Grass
 												{
-													m_cube.instancingPositions.push_back(glm::translate(glm::mat4(1.0f), glm::vec3((wX * MAP_WIDTH) + (mX * CHUNK_WIDTH) + cX, (wY * MAP_HEIGHT) + (mY * CHUNK_HEIGHT) + cY, (wZ * MAP_DEPTH) + (mZ * CHUNK_DEPTH) + cZ)));
+													if (m_raytracingOn)
+													{
+														m_voxelPositions.push_back(glm::vec4((wX * MAP_WIDTH) + (mX * CHUNK_WIDTH) + cX, (wY * MAP_HEIGHT) + (mY * CHUNK_HEIGHT) + cY, (wZ * MAP_DEPTH) + (mZ * CHUNK_DEPTH) + cZ, 1));
+													}				
+													else
+													{
+														m_cube.instancingPositions.push_back(glm::translate(glm::mat4(1.0f), glm::vec3((wX * MAP_WIDTH) + (mX * CHUNK_WIDTH) + cX, (wY * MAP_HEIGHT) + (mY * CHUNK_HEIGHT) + cY, (wZ * MAP_DEPTH) + (mZ * CHUNK_DEPTH) + cZ)));
+													}
 												}
 												else if (*voxel == 2) // Water
 												{
-													m_waterBlock.instancingPositions.push_back(glm::translate(glm::mat4(1.0f), glm::vec3((wX * MAP_WIDTH) + (mX * CHUNK_WIDTH) + cX, (wY * MAP_HEIGHT) + (mY * CHUNK_HEIGHT) + cY, (wZ * MAP_DEPTH) + (mZ * CHUNK_DEPTH) + cZ)));
+													if (m_raytracingOn)
+													{
+														m_voxelPositions.push_back(glm::vec4((wX * MAP_WIDTH) + (mX * CHUNK_WIDTH) + cX, (wY * MAP_HEIGHT) + (mY * CHUNK_HEIGHT) + cY, (wZ * MAP_DEPTH) + (mZ * CHUNK_DEPTH) + cZ, 1));
+													}
+													else
+													{
+														m_waterBlock.instancingPositions.push_back(glm::translate(glm::mat4(1.0f), glm::vec3((wX * MAP_WIDTH) + (mX * CHUNK_WIDTH) + cX, (wY * MAP_HEIGHT) + (mY * CHUNK_HEIGHT) + cY, (wZ * MAP_DEPTH) + (mZ * CHUNK_DEPTH) + cZ)));
+													}
 												}
 												else if (*voxel == 3) // Tree
-												{
-													m_treeBlock.instancingPositions.push_back(glm::translate(glm::mat4(1.0f), glm::vec3((wX * MAP_WIDTH) + (mX * CHUNK_WIDTH) + cX, (wY * MAP_HEIGHT) + (mY * CHUNK_HEIGHT) + cY, (wZ * MAP_DEPTH) + (mZ * CHUNK_DEPTH) + cZ)));
+												{									
+													if (m_raytracingOn)
+													{
+														m_voxelPositions.push_back(glm::vec4((wX * MAP_WIDTH) + (mX * CHUNK_WIDTH) + cX, (wY * MAP_HEIGHT) + (mY * CHUNK_HEIGHT) + cY, (wZ * MAP_DEPTH) + (mZ * CHUNK_DEPTH) + cZ, 1));
+													}
+													else
+													{
+														m_treeBlock.instancingPositions.push_back(glm::translate(glm::mat4(1.0f), glm::vec3((wX * MAP_WIDTH) + (mX * CHUNK_WIDTH) + cX, (wY * MAP_HEIGHT) + (mY * CHUNK_HEIGHT) + cY, (wZ * MAP_DEPTH) + (mZ * CHUNK_DEPTH) + cZ)));
+													}
 												}
 												else if (*voxel == 4) // Leaf
-												{
-													m_leafBlock.instancingPositions.push_back(glm::translate(glm::mat4(1.0f), glm::vec3((wX * MAP_WIDTH) + (mX * CHUNK_WIDTH) + cX, (wY * MAP_HEIGHT) + (mY * CHUNK_HEIGHT) + cY, (wZ * MAP_DEPTH) + (mZ * CHUNK_DEPTH) + cZ)));
+												{												
+													if (m_raytracingOn)
+													{
+														m_voxelPositions.push_back(glm::vec4((wX * MAP_WIDTH) + (mX * CHUNK_WIDTH) + cX, (wY * MAP_HEIGHT) + (mY * CHUNK_HEIGHT) + cY, (wZ * MAP_DEPTH) + (mZ * CHUNK_DEPTH) + cZ, 1));
+													}
+													else
+													{
+														m_leafBlock.instancingPositions.push_back(glm::translate(glm::mat4(1.0f), glm::vec3((wX * MAP_WIDTH) + (mX * CHUNK_WIDTH) + cX, (wY * MAP_HEIGHT) + (mY * CHUNK_HEIGHT) + cY, (wZ * MAP_DEPTH) + (mZ * CHUNK_DEPTH) + cZ)));
+													}
 												}
 											}
 										}
@@ -604,6 +626,13 @@ Indices Game::getChunkXYZ(int x, int y, int z)
 	return indices;
 }
 
+/// <summary>
+/// Used for mouse interaction with voxels.
+/// </summary>
+/// <param name="t_origin">The origin point (the current mouse position).</param>
+/// <param name="t_direction">The ray direction.</param>
+/// <param name="t_hitPoint">The coordinates of the voxel that was hit with the ray.</param>
+/// <returns>True if an intersection was found.</returns>
 bool Game::checkForVoxelIntersections(glm::vec3 t_origin, glm::vec3 t_direction, glm::vec3& t_hitPoint)
 {
 	// Only check neighbouring chunks for intersections
@@ -621,7 +650,7 @@ bool Game::checkForVoxelIntersections(glm::vec3 t_origin, glm::vec3 t_direction,
 	int map_w = MAP_WIDTH / CHUNK_WIDTH;
 	int map_d = MAP_DEPTH / CHUNK_DEPTH;
 	
-	//// Check all the immediate chunks around you (including the one you're in)
+	// Check all the immediate chunks around you (including the one you're in)
 	//for (int z = 0; z < 3; ++z)
 	//{
 	//	for (int y = 0; y < 3; ++y)
@@ -666,8 +695,8 @@ void Game::initialiseRaytracing()
 
 	// Copy voxel positions to GPU
 	glGenBuffers(1, &m_voxelPositions_SSBO);
-	//glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_voxelPositions_SSBO);
-	//glBufferData(GL_SHADER_STORAGE_BUFFER, m_voxelPositions.size() * sizeof(glm::vec4), &m_voxelPositions[0], GL_DYNAMIC_COPY);
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_voxelPositions_SSBO);
+	glBufferData(GL_SHADER_STORAGE_BUFFER, m_voxelPositions.size() * sizeof(glm::vec4), &m_voxelPositions[0], GL_DYNAMIC_COPY);
 	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, m_voxelPositions_SSBO);
 	glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 
@@ -675,7 +704,8 @@ void Game::initialiseRaytracing()
 }
 
 /// <summary>
-/// Perform raytracing.
+/// Perform ray tracing.
+/// Ray Tracing is experimental and does not work correctly.
 /// </summary>
 void Game::raytrace()
 {
@@ -701,8 +731,7 @@ void Game::raytrace()
 
 	// Voxel buffer object
 	glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_voxelPositions_SSBO);
-	//glBufferData(GL_SHADER_STORAGE_BUFFER, m_voxelPositions.size() * sizeof(glm::vec3), &m_voxelPositions[0], GL_READ_ONLY);
-	//glBufferData(GL_SHADER_STORAGE_BUFFER, m_voxelOctree->size() * sizeof(glm::vec3), &m_voxelOctree[0], GL_READ_ONLY);
+	glBufferData(GL_SHADER_STORAGE_BUFFER, m_voxelPositions.size() * sizeof(glm::vec3), &m_voxelPositions[0], GL_READ_ONLY);
 
 	// Compute appropriate invocation dimension
 	int f_worksizeX = ab::OpenGL::nextPowerOfTwo(1280);

@@ -1,7 +1,7 @@
 /// ********************************************************************************
 /// * ModelLoader.cpp is based on code from the OpenGL Tutorial website.		   *
 /// * http://www.opengl-tutorial.org/beginners-tutorials/tutorial-7-model-loading/ *
-/// *************************************************************************************************************************************************************
+/// ********************************************************************************
 
 #include "Game.h"
 #include "SDL.h"
@@ -10,11 +10,6 @@ int main(int argc, char *argv[])
 {
 	// Initialise SDL here because it needs to be done BEFORE creating the window and renderer
 	SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMECONTROLLER);
-
-	// This is total nonsense, doesn't work properly (shows for about 2 seconds on load)
-	SDL_Cursor *cursor;
-	cursor = SDL_CreateSystemCursor(SDL_SYSTEM_CURSOR_HAND);
-	SDL_SetCursor(cursor);
 
 	// Set OpenGL version to use
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);

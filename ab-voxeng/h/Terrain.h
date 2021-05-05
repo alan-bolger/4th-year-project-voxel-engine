@@ -1,6 +1,8 @@
-// *************************************************
-// * Terrain.h and Terrain.cpp - Alan Bolger, 2020 *
-// *************************************************
+// ********************************************************************************
+// * Terrain.h and Terrain.cpp contains code based on the tutorial				  *
+// * 'Making maps with noise functions' by Red Blob Games, 2015.				  *
+// * https://www.redblobgames.com/maps/terrain-from-noise/						  *
+// ********************************************************************************
 
 #ifndef TERRAIN_H
 #define TERRAIN_H

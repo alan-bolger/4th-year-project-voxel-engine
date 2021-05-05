@@ -5,8 +5,6 @@
 /// </summary>
 World::World()
 {
-	std::cout << "Constructing World object" << std::endl;
-
 	// Set world dimensions
 	int x = WORLD_WIDTH / MAP_WIDTH;
 	int y = WORLD_HEIGHT / MAP_HEIGHT;
@@ -227,10 +225,13 @@ void World::populate(int heightMap[WORLD_WIDTH][WORLD_DEPTH], int treeMap[WORLD_
 	placeScenery(treeMap);
 }
 
+/// <summary>
+/// Place scenery.
+/// Currently places trees on the map using a generated noise map.
+/// </summary>
+/// <param name="treeMap"></param>
 void World::placeScenery(int treeMap[WORLD_WIDTH][WORLD_DEPTH])
 {
-	std::cout << "Placing scenery" << std::endl;
-
 	for (int y = 0; y < WORLD_DEPTH; ++y)
 	{
 		for (int x = 0; x < WORLD_WIDTH; ++x)
@@ -247,7 +248,7 @@ void World::placeScenery(int treeMap[WORLD_WIDTH][WORLD_DEPTH])
 			// Creates tree trunk
 			for (int i = 0; i < f_treeHeight; i++)
 			{
-				setVoxel(x, treeMap[x][y] + 48 + i, y, 3); // Tree
+				setVoxel(x, treeMap[x][y] + i, y, 3); // Tree
 			}
 
 			int yBegin = treeMap[x][y] + f_treeHeight;
@@ -261,7 +262,7 @@ void World::placeScenery(int treeMap[WORLD_WIDTH][WORLD_DEPTH])
 				{
 					for (int width = x - f_treeTopScale + modifier; width < x + f_treeTopScale - modifier + 1; ++width)
 					{
-						setVoxel(width, height + 48, depth, 4); // Leaf
+						setVoxel(width, height, depth, 4); // Leaf
 					}
 				}
 
@@ -269,8 +270,6 @@ void World::placeScenery(int treeMap[WORLD_WIDTH][WORLD_DEPTH])
 			}
 		}
 	}
-
-	std::cout << "Scenery successfully loaded" << std::endl;
 }
 
 
